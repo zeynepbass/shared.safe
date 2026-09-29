@@ -1,22 +1,18 @@
 import { and, asc, desc, eq, inArray, isNull } from 'drizzle-orm';
 
+import { computeBalances } from '@/shared/lib/balances';
+
 import { notifyChange } from '../changes';
 import { DbValidationError } from '../errors';
 import { newId, now } from '../ids';
 import { groups, members, settlements } from '../schema';
 import { logActivity } from './activityRepository';
+import { getGroup, touchGroup } from './groupAccess';
 import { listExpensesForGroups } from './expenseRepository';
 import { insertMember } from './memberRepository';
+import { getLocalUser } from './userRepository';
 
-const activeGroup = (id) => and(eq(groups.id, id), isNull(groups.deletedAt));
-
-export function touchGroup(executor, id, at = now()) {
-  executor.update(groups).set({ updatedAt: at }).where(eq(groups.id, id)).run();
-}
-
-export function getGroup(db, id) {
-  return db.select().from(groups).where(activeGroup(id)).get() ?? null;
-}
+export { getGroup, touchGroup };
 
 export function listGroups(db) {
   return db
@@ -27,10 +23,14 @@ export function listGroups(db) {
     .all();
 }
 
-export function createGroup(db, { name, type, currency, icon, self }) {
+// The local user joins every group they create as its first member; `members` are added after
+// them in the given order.
+export function createGroup(db, { name, type, currency, icon, members: others = [] }) {
   const timestamp = now();
   const id = newId();
   db.transaction((tx) => {
+    const self = getLocalUser(tx);
+    if (!self) throw new DbValidationError('profileMissing');
     tx.insert(groups)
       .values({
         id,
@@ -53,9 +53,15 @@ export function createGroup(db, { name, type, currency, icon, self }) {
     insertMember(
       tx,
       id,
-      { name: self.name, avatarColor: self.avatarColor, isLocalUser: true },
+      {
+        name: self.name,
+        avatarColor: self.avatarColor,
+        avatarPath: self.avatarPath,
+        isLocalUser: true,
+      },
       timestamp,
     );
+    for (const member of others) insertMember(tx, id, member, timestamp);
   });
   notifyChange(['groups', 'members', 'activity_log']);
   return id;
@@ -138,4 +144,31 @@ export function getGroupSnapshot(db, id) {
   const group = getGroup(db, id);
   if (!group) return null;
   return loadSnapshots(db, [group])[0];
+}
+
+// Everything the group list needs, with balances already computed from the local user's side.
+// Groups come most recently active first (every change touches updated_at).
+export function listGroupSummaries(db) {
+  return listGroupSnapshots(db).map(
+    ({ group, members: groupMembers, expenses, settlements: groupSettlements }) => {
+      const balances = computeBalances({
+        members: groupMembers,
+        expenses,
+        settlements: groupSettlements,
+      });
+      const self = groupMembers.find((m) => m.isLocalUser) ?? null;
+      const lastExpense = expenses[0] ?? null;
+      return {
+        group,
+        memberCount: groupMembers.length,
+        selfBalance: self ? (balances.get(self.id) ?? 0) : 0,
+        lastExpense: lastExpense && {
+          id: lastExpense.id,
+          description: lastExpense.description,
+          spentOn: lastExpense.spentOn,
+          payer: groupMembers.find((m) => m.id === lastExpense.payerId) ?? null,
+        },
+      };
+    },
+  );
 }

@@ -3,7 +3,6 @@ import { and, asc, eq, isNull } from 'drizzle-orm';
 import { notifyChange } from '../changes';
 import { newId, now } from '../ids';
 import { members, users } from '../schema';
-import { SETTING_KEYS, upsertSetting } from './settingsRepository';
 
 export function getLocalUser(db) {
   return (
@@ -17,11 +16,13 @@ export function getLocalUser(db) {
   );
 }
 
-// The device has a single local profile. Saving it also renames the "me" member in every group.
-export function saveProfile(
-  db,
-  { name, avatarColor, defaultCurrency, completeOnboarding = false },
-) {
+export function hasLocalUser(db) {
+  return getLocalUser(db) !== null;
+}
+
+// The device has a single local profile; onboarding is done once it exists. Saving it also
+// updates the "me" member in every group.
+export function saveProfile(db, { name, avatarColor, avatarPath = null, defaultCurrency }) {
   const timestamp = now();
   const trimmed = name.trim();
   const id = db.transaction((tx) => {
@@ -32,6 +33,7 @@ export function saveProfile(
         .set({
           name: trimmed,
           avatarColor,
+          avatarPath,
           defaultCurrency: defaultCurrency ?? existing.defaultCurrency,
           updatedAt: timestamp,
         })
@@ -44,6 +46,7 @@ export function saveProfile(
           id: userId,
           name: trimmed,
           avatarColor,
+          avatarPath,
           defaultCurrency: defaultCurrency ?? 'TRY',
           createdAt: timestamp,
           updatedAt: timestamp,
@@ -51,13 +54,12 @@ export function saveProfile(
         .run();
     }
     tx.update(members)
-      .set({ name: trimmed, avatarColor, updatedAt: timestamp })
+      .set({ name: trimmed, avatarColor, avatarPath, updatedAt: timestamp })
       .where(and(eq(members.isLocalUser, true), isNull(members.deletedAt)))
       .run();
-    if (completeOnboarding) upsertSetting(tx, SETTING_KEYS.onboarded, '1');
     return userId;
   });
-  notifyChange(['users', 'members', 'settings']);
+  notifyChange(['users', 'members']);
   return id;
 }
 

@@ -43,8 +43,16 @@ export function formatMoney(minor, currency = 'TRY', { locale = 'tr', signed = f
   return body;
 }
 
+// Shifts the decimal point on the string form so 1.005 becomes 101 kuruş rather than the
+// 100.49999… that `1.005 * 100` produces. Halves round away from zero.
 export function toMinor(major) {
-  return Math.round(Number(major) * 100);
+  const value = Number(major);
+  if (!Number.isFinite(value)) throw new Error(`Invalid amount: ${major}`);
+  const abs = Math.abs(value);
+  const text = String(abs);
+  const shifted = text.includes('e') ? abs * 100 : Number(`${text}e2`);
+  const minor = Math.round(shifted);
+  return value < 0 && minor !== 0 ? -minor : minor;
 }
 
 export function fromMinor(minor) {

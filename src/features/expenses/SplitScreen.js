@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { getGroupSnapshot, useDbQuery } from '@/shared/db';
-import { allocateProportionally, computeSplit, FULL_PERCENT } from '@/domain/split';
+import { allocateProportionally, computeSplit, FULL_PERCENT } from '@/shared/lib/split';
 import { memberLabel } from '@/features/groups/useGroupSummary';
 import { currencySymbol, formatAmountInput, parseAmountInput } from '@/shared/lib/money';
 import { useTheme, useThemedStyles } from '@/shared/theme';
@@ -202,7 +202,12 @@ export default function SplitScreen() {
                 onChange={(value) => setIncluded(member.id, value)}
                 accessibilityLabel={label}
               />
-              <Avatar name={member.name} color={member.avatarColor} size="md" />
+              <Avatar
+                name={member.name}
+                color={member.avatarColor}
+                image={member.avatarPath}
+                size="md"
+              />
               <View style={styles.flex}>
                 <AppText variant="bodyLg">{label}</AppText>
                 <AppText variant="caption" color="textMuted">

@@ -1,12 +1,26 @@
+import { FlashList } from '@shopify/flash-list';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeftRight, Paperclip, Receipt, UserPlus } from 'lucide-react-native';
+import {
+  ArrowLeftRight,
+  ChartPie,
+  History,
+  Paperclip,
+  Receipt,
+  UserPlus,
+} from 'lucide-react-native';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SectionList, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getGroupSnapshot, useDbQuery } from '@/shared/db';
-import { effectOnMember } from '@/domain/balances';
+import {
+  getGroupSnapshot,
+  restoreExpense,
+  softDeleteExpense,
+  useDb,
+  useDbQuery,
+} from '@/shared/db';
+import { effectOnMember } from '@/shared/lib/balances';
 import { categoryIcon } from '@/features/expenses/categories';
 import { currencySymbol } from '@/shared/lib/money';
 import { useDateFormat } from '@/shared/lib/useDateFormat';
@@ -24,12 +38,14 @@ import {
   Money,
   Header,
   SectionHeader,
+  SwipeableRow,
   useFormatMoney,
+  useSnackbar,
 } from '@/shared/ui';
 
 import { memberLabel, useGroupSummary } from './useGroupSummary';
 
-const TABLES = ['groups', 'members', 'expenses', 'settlements', 'settings'];
+const TABLES = ['groups', 'members', 'expenses', 'expense_shares', 'settlements'];
 
 function buildTimeline(expenses, settlements) {
   const items = [
@@ -43,18 +59,22 @@ function buildTimeline(expenses, settlements) {
     })),
   ].sort((a, b) => b.date.localeCompare(a.date) || b.at - a.at);
 
-  const sections = [];
+  // FlashList renders one flat list, so each day's header is an item of its own.
+  const rows = [];
   for (const item of items) {
-    const last = sections[sections.length - 1];
-    if (last?.date === item.date) last.data.push(item);
-    else sections.push({ date: item.date, data: [item] });
+    if (rows[rows.length - 1]?.date !== item.date) {
+      rows.push({ kind: 'day', id: item.date, date: item.date });
+    }
+    rows.push(item);
   }
-  return sections;
+  return rows;
 }
 
 export default function GroupDetailScreen() {
   const { groupId } = useLocalSearchParams();
   const { t } = useTranslation();
+  const db = useDb();
+  const snackbar = useSnackbar();
   const styles = useThemedStyles(createStyles);
   const dates = useDateFormat();
   const formatMoney = useFormatMoney();
@@ -65,7 +85,7 @@ export default function GroupDetailScreen() {
   );
   const summary = useGroupSummary(snapshot);
 
-  const sections = useMemo(
+  const rows = useMemo(
     () => (summary ? buildTimeline(summary.expenses, summary.settlements) : []),
     [summary],
   );
@@ -84,6 +104,19 @@ export default function GroupDetailScreen() {
   const nameOf = (id) => memberLabel(memberById.get(id), t);
   const addMember = () => router.push(`/groups/${group.id}/members/new`);
   const addExpense = () => router.push(`/groups/${group.id}/add-expense`);
+
+  const deleteExpense = (expense) => {
+    try {
+      softDeleteExpense(db, expense.id);
+    } catch (error) {
+      console.error(error);
+      return;
+    }
+    snackbar.show({
+      message: t('expenseDetail.deleted'),
+      onUndo: () => restoreExpense(db, expense.id),
+    });
+  };
 
   const balanceLine =
     selfBalance > 0
@@ -129,6 +162,18 @@ export default function GroupDetailScreen() {
           </View>
         </Card>
       </View>
+      <ListItem
+        onPress={() => router.push(`/groups/${group.id}/activity`)}
+        leading={<IconBox icon={History} />}
+        title={t('activity.header')}
+        chevron
+      />
+      <ListItem
+        onPress={() => router.push(`/groups/${group.id}/stats`)}
+        leading={<IconBox icon={ChartPie} />}
+        title={t('stats.header')}
+        chevron
+      />
     </View>
   );
 
@@ -145,29 +190,35 @@ export default function GroupDetailScreen() {
           });
 
     return (
-      <ListItem
-        onPress={() => router.push(`/groups/${group.id}/expense/${expense.id}`)}
-        leading={<IconBox icon={categoryIcon(expense.category)} />}
-        title={expense.description}
-        titleAccessory={
-          expense.receiptPath ? <Icon icon={Paperclip} size={14} color="textMuted" /> : null
-        }
-        subtitle={paidBy}
-        trailingCaption={
-          !involved
-            ? t('groupDetail.notInvolved')
-            : effect < 0
-              ? t('groupDetail.owe')
-              : effect > 0
-                ? t('groupDetail.lent')
-                : null
-        }
-        trailing={
-          involved && effect !== 0 ? (
-            <Money minor={effect} currency={currency} tone="auto" absolute />
-          ) : null
-        }
-      />
+      <SwipeableRow onDelete={() => deleteExpense(expense)} deleteLabel={t('common.delete')}>
+        <ListItem
+          onPress={() => router.push(`/groups/${group.id}/expense/${expense.id}`)}
+          accessibilityActions={[{ name: 'delete', label: t('common.delete') }]}
+          onAccessibilityAction={(event) => {
+            if (event.nativeEvent.actionName === 'delete') deleteExpense(expense);
+          }}
+          leading={<IconBox icon={categoryIcon(expense.category)} />}
+          title={expense.description}
+          titleAccessory={
+            expense.receiptPath ? <Icon icon={Paperclip} size={14} color="textMuted" /> : null
+          }
+          subtitle={paidBy}
+          trailingCaption={
+            !involved
+              ? t('groupDetail.notInvolved')
+              : effect < 0
+                ? t('groupDetail.owe')
+                : effect > 0
+                  ? t('groupDetail.lent')
+                  : null
+          }
+          trailing={
+            involved && effect !== 0 ? (
+              <Money minor={effect} currency={currency} tone="auto" absolute />
+            ) : null
+          }
+        />
+      </SwipeableRow>
     );
   };
 
@@ -208,7 +259,7 @@ export default function GroupDetailScreen() {
         })}
         actions={[{ icon: UserPlus, label: t('groupDetail.addMember'), onPress: addMember }]}
       />
-      {sections.length === 0 ? (
+      {rows.length === 0 ? (
         <>
           {header}
           <EmptyState
@@ -227,17 +278,17 @@ export default function GroupDetailScreen() {
         </>
       ) : (
         <>
-          <SectionList
-            sections={sections}
+          <FlashList
+            data={rows}
             keyExtractor={(item) => `${item.kind}:${item.id}`}
+            getItemType={(item) => item.kind}
             ListHeaderComponent={header}
-            renderSectionHeader={({ section }) => (
-              <SectionHeader variant="overline" title={dates.sectionHeader(section.date)} />
-            )}
-            renderItem={({ item }) =>
-              item.kind === 'expense' ? renderExpense(item.e) : renderSettlement(item.s)
-            }
-            stickySectionHeadersEnabled={false}
+            renderItem={({ item }) => {
+              if (item.kind === 'day') {
+                return <SectionHeader variant="overline" title={dates.sectionHeader(item.date)} />;
+              }
+              return item.kind === 'expense' ? renderExpense(item.e) : renderSettlement(item.s);
+            }}
             contentContainerStyle={styles.listContent}
           />
           <Fab title={t('groupDetail.addExpense')} onPress={addExpense} />

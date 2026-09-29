@@ -27,7 +27,8 @@
   "theme": {
     "title": "Theme",
     "light": "Light",
-    "dark": "Dark"
+    "dark": "Dark",
+    "system": "System"
   },
   "language": {
     "tr": "Türkçe",
@@ -54,23 +55,31 @@
     "full": "{{month}} {{day}}, {{year}}",
     "relativeHeader": "{{relative}} · {{date}}",
     "pick": "Pick a date",
-    "other": "Another date…"
+    "other": "Another date…",
+    "time": "{{hours}}:{{minutes}}"
   },
   "onboarding": {
     "slides": {
       "offline": {
         "figure": "Fig. 01",
-        "caption": "On device · No internet needed",
+        "caption": "On device · 3 pending",
         "eyebrow": "01 / Offline",
         "title": "Works without internet",
-        "body": "Expenses are saved right on your device. Connection or not, you can keep the kitty anywhere."
+        "body": "Expenses are saved on your device first and sync with your group on their own once you are back online."
+      },
+      "encryption": {
+        "figure": "Fig. 02",
+        "caption": "256-bit · Key on device",
+        "eyebrow": "02 / Encryption",
+        "title": "End-to-end encrypted",
+        "body": "Data can only be opened on group members’ devices. Nobody, not even the server, can read it."
       },
       "receipt": {
-        "figure": "Fig. 02",
-        "caption": "Amount · Date · Receipt",
-        "eyebrow": "02 / Receipts",
-        "title": "Attach the receipt",
-        "body": "Snap a photo of the receipt and keep it with the expense, so nobody loses track of who paid what."
+        "figure": "Fig. 03",
+        "caption": "Amount · Date · Store",
+        "eyebrow": "03 / Receipt scan",
+        "title": "Scan the receipt, done",
+        "body": "Point the camera at the receipt; amount, date and store name fill themselves in."
       }
     },
     "start": "Get started",
@@ -81,12 +90,18 @@
     "editHeader": "Edit profile",
     "title": "Create your profile",
     "editTitle": "Your profile",
-    "body": "Your name and color represent you in your groups. No email or phone number needed.",
+    "body": "Only visible to people in your groups. No email or phone number needed.",
     "colorLabel": "Profile color",
     "nameLabel": "Your name",
     "namePlaceholder": "e.g. Deniz",
     "nameRequired": "Please enter your name.",
-    "currencyLabel": "Default currency"
+    "currencyLabel": "Default currency",
+    "photo": "Profile photo",
+    "photoTake": "Take photo",
+    "photoPick": "Choose from library",
+    "photoRemove": "Remove photo",
+    "photoPermission": "Allow access to add a photo.",
+    "nameTooLong": "Name can be at most 40 characters."
   },
   "groups": {
     "title": "Groups",
@@ -110,10 +125,22 @@
     "createGroup": "Create group"
   },
   "groupTypes": {
-    "home": { "title": "Home", "subtitle": "Roommates" },
-    "trip": { "title": "Trip", "subtitle": "Travel group" },
-    "couple": { "title": "Couple", "subtitle": "Two-person kitty" },
-    "other": { "title": "Other", "subtitle": "Club, office, event" }
+    "home": {
+      "title": "Home",
+      "subtitle": "Roommates"
+    },
+    "trip": {
+      "title": "Trip",
+      "subtitle": "Travel group"
+    },
+    "couple": {
+      "title": "Couple",
+      "subtitle": "Two-person kitty"
+    },
+    "other": {
+      "title": "Other",
+      "subtitle": "Club, office, event"
+    }
   },
   "groupForm": {
     "header": "New group",
@@ -122,8 +149,18 @@
     "nameRequired": "Give your group a name.",
     "typeLabel": "Type",
     "currencyLabel": "Currency",
-    "info": "The group is stored on this device only. You can add members by name in the next step.",
-    "submit": "Create group"
+    "info": "The group is stored on this device. Add members by name now, or later from the group.",
+    "submit": "Create group",
+    "nameTooLong": "Group name can be at most 40 characters.",
+    "membersLabel": "Members",
+    "memberPlaceholder": "Member name, e.g. Ece",
+    "addMember": "Add member",
+    "removeMember": "Remove {{name}}",
+    "memberRequired": "Enter the member’s name.",
+    "memberDuplicate": "A member with this name already exists.",
+    "memberTooLong": "Name can be at most 40 characters.",
+    "tooManyMembers": "A group can have at most 50 people.",
+    "onlyYou": "For now it is just you."
   },
   "groupDetail": {
     "subtitle": "{{type}} · {{count}} people",
@@ -233,14 +270,43 @@
     "defaultCurrency": "Default currency",
     "language": "Language",
     "about": "About",
-    "version": "Version {{version}}"
+    "version": "Version {{version}}",
+    "data": "Data",
+    "export": "Export as CSV",
+    "exportHint": "All expenses and payments in one file",
+    "exportEmpty": "There is nothing to export.",
+    "exportUnavailable": "Sharing is not available on this device.",
+    "deleteAll": "Delete all data",
+    "deleteAllHint": "Profile, groups and receipts are removed for good",
+    "deleteAllTitle": "Delete all data?",
+    "deleteAllBody": "Your profile, every group, expense and receipt photo will be permanently removed from this device. This cannot be undone.",
+    "deleteAllConfirm": "Delete everything",
+    "csv": {
+      "type": "Type",
+      "group": "Group",
+      "date": "Date",
+      "description": "Description",
+      "category": "Category",
+      "amount": "Amount",
+      "currency": "Currency",
+      "paidBy": "Paid by",
+      "paidTo": "Paid to",
+      "splitType": "Split",
+      "shares": "Shares",
+      "expense": "Expense",
+      "settlement": "Payment"
+    }
   },
-  "amountInput": { "label": "Amount" },
+  "amountInput": {
+    "label": "Amount"
+  },
   "avatarGroup": {
     "label_one": "{{count}} person: {{names}}",
     "label_other": "{{count}} people: {{names}}"
   },
-  "snackbar": { "actionAvailable": "{{action}} available" },
+  "snackbar": {
+    "actionAvailable": "{{action}} available"
+  },
   "offlineBanner": {
     "message": "Offline · changes are saved on this device",
     "pending_one": "Offline · {{count}} change pending",
@@ -251,5 +317,38 @@
     "pending": "Pending",
     "offline": "Offline",
     "error": "Sync failed"
+  },
+  "activity": {
+    "header": "Activity",
+    "empty": "Nothing has happened yet",
+    "types": {
+      "group_created": "Group created: {{name}}",
+      "group_updated": "Group details updated",
+      "group_deleted": "Group deleted",
+      "member_added": "{{name}} was added",
+      "member_updated": "{{name}} was updated",
+      "member_removed": "{{name}} was removed",
+      "expense_created": "Expense added: {{description}}",
+      "expense_updated": "Expense edited: {{description}}",
+      "expense_deleted": "Expense deleted: {{description}}",
+      "expense_restored": "Expense restored: {{description}}",
+      "settlement_created": "Payment recorded: {{from}} → {{to}}",
+      "settlement_deleted": "Payment removed: {{from}} → {{to}}",
+      "settlement_restored": "Payment restored: {{from}} → {{to}}"
+    }
+  },
+  "stats": {
+    "header": "Statistics",
+    "total": "Total spent",
+    "count": "Expenses",
+    "monthlyAverage": "Monthly average",
+    "byCategory": "By category",
+    "byMonth": "Last 6 months",
+    "emptyTitle": "No expenses to show",
+    "emptyBody": "As you add expenses, the breakdown and monthly chart show up here.",
+    "barA11y": "{{label}}: {{amount}}",
+    "categoryA11y": "{{label}}: {{amount}}, {{percent}} percent of spending",
+    "tableView": "Show as table",
+    "chartView": "Show as chart"
   }
 }

@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ArrowRight, Receipt, WifiOff } from 'lucide-react-native';
+import { ArrowRight, Lock, Scan, WifiOff } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -10,7 +10,8 @@ import { AppText, BlueprintGrid, BrandBar, Button, FigureBox, Icon, PageDots } f
 
 const SLIDES = [
   { key: 'offline', icon: WifiOff },
-  { key: 'receipt', icon: Receipt },
+  { key: 'encryption', icon: Lock },
+  { key: 'receipt', icon: Scan },
 ];
 
 export default function WelcomeScreen() {

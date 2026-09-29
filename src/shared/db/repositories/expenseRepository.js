@@ -6,7 +6,7 @@ import { newId, now } from '../ids';
 import { expenses } from '../schema';
 import { logActivity } from './activityRepository';
 import { buildShares, listShares, writeShares } from './expenseShareRepository';
-import { getGroup, touchGroup } from './groupRepository';
+import { getGroup, touchGroup } from './groupAccess';
 import { assertActiveMembers } from './memberRepository';
 
 const TABLES = ['expenses', 'expense_shares', 'groups', 'activity_log'];

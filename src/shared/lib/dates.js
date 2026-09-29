@@ -25,3 +25,7 @@ export function relativeDay(iso, now = new Date()) {
   if (iso === addDays(today, -1)) return 'yesterday';
   return null;
 }
+
+export function isoFromTimestamp(ms) {
+  return toISODate(new Date(ms));
+}

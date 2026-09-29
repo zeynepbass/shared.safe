@@ -11,7 +11,7 @@ import {
   useDb,
   useDbQuery,
 } from '@/shared/db';
-import { simplifyDebts } from '@/domain/simplify';
+import { simplifyDebts } from '@/shared/lib/simplify';
 import { memberLabel, useGroupSummary } from '@/features/groups/useGroupSummary';
 import { todayISO } from '@/shared/lib/dates';
 import { useThemedStyles } from '@/shared/theme';
@@ -85,7 +85,12 @@ export default function BalancesScreen() {
               amount: formatMoney(value, currency, { signed: true }),
             })}
           >
-            <Avatar name={member.name} color={member.avatarColor} size="md" />
+            <Avatar
+              name={member.name}
+              color={member.avatarColor}
+              image={member.avatarPath}
+              size="md"
+            />
             <View style={styles.memberBody}>
               <AppText variant="bodyLg">{label}</AppText>
               <BalanceBar value={value} max={maxAbs} />
@@ -116,9 +121,19 @@ export default function BalancesScreen() {
                 })}
               >
                 <View style={styles.pair}>
-                  <Avatar name={from?.name} color={from?.avatarColor} size="md" />
+                  <Avatar
+                    name={from?.name}
+                    color={from?.avatarColor}
+                    image={from?.avatarPath}
+                    size="md"
+                  />
                   <Icon icon={ArrowRight} size={14} color="textSubtle" />
-                  <Avatar name={to?.name} color={to?.avatarColor} size="md" />
+                  <Avatar
+                    name={to?.name}
+                    color={to?.avatarColor}
+                    image={to?.avatarPath}
+                    size="md"
+                  />
                 </View>
                 <View>
                   <AppText variant="caption" color="textMuted">

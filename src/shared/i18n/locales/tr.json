@@ -27,7 +27,8 @@
   "theme": {
     "title": "Tema",
     "light": "Açık",
-    "dark": "Koyu"
+    "dark": "Koyu",
+    "system": "Sistem"
   },
   "language": {
     "tr": "Türkçe",
@@ -54,23 +55,31 @@
     "full": "{{day}} {{month}} {{year}}",
     "relativeHeader": "{{relative}} · {{date}}",
     "pick": "Tarih seç",
-    "other": "Başka bir tarih…"
+    "other": "Başka bir tarih…",
+    "time": "{{hours}}:{{minutes}}"
   },
   "onboarding": {
     "slides": {
       "offline": {
         "figure": "FIG. 01",
-        "caption": "Cihazda · İnternet gerekmez",
+        "caption": "Cihazda · 3 bekleyen",
         "eyebrow": "01 / Çevrimdışı",
         "title": "İnternet yokken de çalışır",
-        "body": "Harcamaların doğrudan cihazına kaydedilir. Bağlantı olsun olmasın, kasayı her yerde tutabilirsin."
+        "body": "Harcamalar önce cihazına kaydedilir. Bağlantı geldiğinde grubunla kendiliğinden eşitlenir."
+      },
+      "encryption": {
+        "figure": "FIG. 02",
+        "caption": "256-bit · Anahtar cihazında",
+        "eyebrow": "02 / Şifreleme",
+        "title": "Uçtan uca şifreli",
+        "body": "Veriler yalnızca grup üyelerinin cihazlarında açılır. Sunucu dahil kimse içeriği göremez."
       },
       "receipt": {
-        "figure": "FIG. 02",
-        "caption": "Tutar · Tarih · Fiş",
-        "eyebrow": "02 / Fiş",
-        "title": "Fişi harcamaya ekle",
-        "body": "Fişin fotoğrafını çek; harcamanın yanında saklansın, kim ne ödedi hiç karışmasın."
+        "figure": "FIG. 03",
+        "caption": "Tutar · Tarih · Mağaza",
+        "eyebrow": "03 / Fiş okuma",
+        "title": "Fişi okut, gerisi hazır",
+        "body": "Kamerayı fişe tut; tutar, tarih ve mağaza adı otomatik doldurulsun."
       }
     },
     "start": "Başlayalım",
@@ -81,12 +90,18 @@
     "editHeader": "Profili düzenle",
     "title": "Profilini oluştur",
     "editTitle": "Profilin",
-    "body": "Adın ve rengin gruplarında seni temsil eder. E-posta ya da telefon numarası gerekmez.",
+    "body": "Yalnızca gruplarındaki kişilere görünür. E-posta ya da telefon numarası gerekmez.",
     "colorLabel": "Profil rengi",
     "nameLabel": "Adın",
     "namePlaceholder": "Örn. Deniz",
     "nameRequired": "Adını yazmalısın.",
-    "currencyLabel": "Varsayılan para birimi"
+    "currencyLabel": "Varsayılan para birimi",
+    "photo": "Profil fotoğrafı",
+    "photoTake": "Fotoğraf çek",
+    "photoPick": "Galeriden seç",
+    "photoRemove": "Fotoğrafı kaldır",
+    "photoPermission": "Fotoğraf eklemek için izin vermelisin.",
+    "nameTooLong": "Ad en fazla 40 karakter olabilir."
   },
   "groups": {
     "title": "Gruplar",
@@ -110,10 +125,22 @@
     "createGroup": "Grup oluştur"
   },
   "groupTypes": {
-    "home": { "title": "Ev", "subtitle": "Ev arkadaşları" },
-    "trip": { "title": "Tatil", "subtitle": "Seyahat grubu" },
-    "couple": { "title": "Çift", "subtitle": "İki kişilik kasa" },
-    "other": { "title": "Diğer", "subtitle": "Kulüp, ofis, etkinlik" }
+    "home": {
+      "title": "Ev",
+      "subtitle": "Ev arkadaşları"
+    },
+    "trip": {
+      "title": "Tatil",
+      "subtitle": "Seyahat grubu"
+    },
+    "couple": {
+      "title": "Çift",
+      "subtitle": "İki kişilik kasa"
+    },
+    "other": {
+      "title": "Diğer",
+      "subtitle": "Kulüp, ofis, etkinlik"
+    }
   },
   "groupForm": {
     "header": "Yeni grup",
@@ -122,8 +149,18 @@
     "nameRequired": "Grubuna bir ad ver.",
     "typeLabel": "Tür",
     "currencyLabel": "Para birimi",
-    "info": "Grup yalnızca bu cihazda saklanır. Üyeleri bir sonraki adımda adlarıyla ekleyebilirsin.",
-    "submit": "Grubu oluştur"
+    "info": "Grup bu cihazda saklanır. Üyeleri şimdi adlarıyla ekleyebilir, sonra gruptan da ekleyebilirsin.",
+    "submit": "Grubu oluştur",
+    "nameTooLong": "Grup adı en fazla 40 karakter olabilir.",
+    "membersLabel": "Üyeler",
+    "memberPlaceholder": "Üye adı, örn. Ece",
+    "addMember": "Üyeyi ekle",
+    "removeMember": "{{name}} adlı üyeyi çıkar",
+    "memberRequired": "Üyenin adını yaz.",
+    "memberDuplicate": "Bu adla bir üye zaten var.",
+    "memberTooLong": "Ad en fazla 40 karakter olabilir.",
+    "tooManyMembers": "Bir grupta en fazla 50 kişi olabilir.",
+    "onlyYou": "Şimdilik yalnızca sen varsın."
   },
   "groupDetail": {
     "subtitle": "{{type}} · {{count}} kişi",
@@ -233,11 +270,42 @@
     "defaultCurrency": "Varsayılan para birimi",
     "language": "Dil",
     "about": "Hakkında",
-    "version": "Sürüm {{version}}"
+    "version": "Sürüm {{version}}",
+    "data": "Veriler",
+    "export": "CSV olarak dışa aktar",
+    "exportHint": "Tüm harcamalar ve ödemeler tek dosyada",
+    "exportEmpty": "Dışa aktarılacak kayıt yok.",
+    "exportUnavailable": "Bu cihazda paylaşım kullanılamıyor.",
+    "deleteAll": "Tüm verileri sil",
+    "deleteAllHint": "Profil, gruplar ve fişler kalıcı olarak silinir",
+    "deleteAllTitle": "Tüm veriler silinsin mi?",
+    "deleteAllBody": "Profilin, tüm grupların, harcamaların ve fiş fotoğrafların bu cihazdan kalıcı olarak silinir. Bu işlem geri alınamaz.",
+    "deleteAllConfirm": "Hepsini sil",
+    "csv": {
+      "type": "Tür",
+      "group": "Grup",
+      "date": "Tarih",
+      "description": "Açıklama",
+      "category": "Kategori",
+      "amount": "Tutar",
+      "currency": "Para birimi",
+      "paidBy": "Ödeyen",
+      "paidTo": "Alan",
+      "splitType": "Bölüşüm",
+      "shares": "Paylar",
+      "expense": "Harcama",
+      "settlement": "Ödeme"
+    }
   },
-  "amountInput": { "label": "Tutar" },
-  "avatarGroup": { "label": "{{count}} kişi: {{names}}" },
-  "snackbar": { "actionAvailable": "{{action}} seçeneği var" },
+  "amountInput": {
+    "label": "Tutar"
+  },
+  "avatarGroup": {
+    "label": "{{count}} kişi: {{names}}"
+  },
+  "snackbar": {
+    "actionAvailable": "{{action}} seçeneği var"
+  },
   "offlineBanner": {
     "message": "Çevrimdışı · değişiklikler cihazda saklanıyor",
     "pending": "Çevrimdışı · {{count}} değişiklik bekliyor"
@@ -247,5 +315,38 @@
     "pending": "Bekleyen",
     "offline": "Çevrimdışı",
     "error": "Eşitlenemedi"
+  },
+  "activity": {
+    "header": "Aktivite",
+    "empty": "Henüz bir hareket yok",
+    "types": {
+      "group_created": "Grup oluşturuldu: {{name}}",
+      "group_updated": "Grup bilgileri güncellendi",
+      "group_deleted": "Grup silindi",
+      "member_added": "{{name}} gruba eklendi",
+      "member_updated": "{{name}} güncellendi",
+      "member_removed": "{{name}} gruptan çıkarıldı",
+      "expense_created": "Harcama eklendi: {{description}}",
+      "expense_updated": "Harcama düzenlendi: {{description}}",
+      "expense_deleted": "Harcama silindi: {{description}}",
+      "expense_restored": "Harcama geri alındı: {{description}}",
+      "settlement_created": "Ödeme kaydedildi: {{from}} → {{to}}",
+      "settlement_deleted": "Ödeme kaydı silindi: {{from}} → {{to}}",
+      "settlement_restored": "Ödeme kaydı geri alındı: {{from}} → {{to}}"
+    }
+  },
+  "stats": {
+    "header": "İstatistikler",
+    "total": "Toplam harcama",
+    "count": "Harcama sayısı",
+    "monthlyAverage": "Aylık ortalama",
+    "byCategory": "Kategorilere göre",
+    "byMonth": "Son 6 ay",
+    "emptyTitle": "Gösterilecek harcama yok",
+    "emptyBody": "Harcama ekledikçe dağılım ve aylık grafik burada görünür.",
+    "barA11y": "{{label}}: {{amount}}",
+    "categoryA11y": "{{label}}: {{amount}}, toplamın yüzde {{percent}} kadarı",
+    "tableView": "Tablo olarak göster",
+    "chartView": "Grafik olarak göster"
   }
 }

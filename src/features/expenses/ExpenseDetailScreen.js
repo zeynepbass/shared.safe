@@ -134,7 +134,12 @@ export default function ExpenseDetailScreen() {
                 label: t('expenseDetail.payer'),
                 value: (
                   <View style={styles.inline}>
-                    <Avatar name={payer?.name} color={payer?.avatarColor} size="xs" />
+                    <Avatar
+                      name={payer?.name}
+                      color={payer?.avatarColor}
+                      image={payer?.avatarPath}
+                      size="xs"
+                    />
                     <AppText variant="bodyStrong">{memberLabel(payer, t)}</AppText>
                   </View>
                 ),
@@ -174,7 +179,14 @@ export default function ExpenseDetailScreen() {
         return (
           <ListItem
             key={share.memberId}
-            leading={<Avatar name={member?.name} color={member?.avatarColor} size="md" />}
+            leading={
+              <Avatar
+                name={member?.name}
+                color={member?.avatarColor}
+                image={member?.avatarPath}
+                size="md"
+              />
+            }
             title={memberLabel(member, t)}
             subtitle={weightCaption(share)}
             trailing={<Money minor={share.amount} currency={currency} />}

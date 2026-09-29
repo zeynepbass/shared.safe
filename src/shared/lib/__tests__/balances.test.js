@@ -1,4 +1,4 @@
-import { computeBalances, effectOnMember } from '../balances';
+import { computeBalances, effectOnMember, totalSpent } from '../balances';
 
 const members = [{ id: 'me' }, { id: 'ece' }, { id: 'mert' }];
 
@@ -75,5 +75,43 @@ describe('effectOnMember', () => {
 
   it('is zero for uninvolved members', () => {
     expect(effectOnMember(expense, 'mert')).toBe(0);
+  });
+});
+
+describe('soft-deleted records', () => {
+  it('are left out of the balance', () => {
+    const balances = computeBalances({
+      members,
+      expenses: [
+        {
+          payerId: 'me',
+          amount: 6000,
+          deletedAt: 1,
+          shares: [
+            { memberId: 'me', amount: 3000 },
+            { memberId: 'ece', amount: 3000 },
+          ],
+        },
+        {
+          payerId: 'ece',
+          amount: 1000,
+          shares: [
+            { memberId: 'me', amount: 1000 },
+            { memberId: 'mert', amount: 500, deletedAt: 1 },
+          ],
+        },
+      ],
+      settlements: [{ fromMemberId: 'me', toMemberId: 'ece', amount: 400, deletedAt: 1 }],
+    });
+    expect(Object.fromEntries(balances)).toEqual({ me: -1000, ece: 1000, mert: 0 });
+    expect(totalSpent([{ amount: 5 }, { amount: 7, deletedAt: 1 }])).toBe(5);
+  });
+
+  it('still reports members that appear only in records', () => {
+    const balances = computeBalances({
+      members: [{ id: 'me' }],
+      expenses: [{ payerId: 'me', amount: 100, shares: [{ memberId: 'old', amount: 100 }] }],
+    });
+    expect(balances.get('old')).toBe(-100);
   });
 });

@@ -4,3 +4,4 @@ dist
 design
 ios
 android
+src/shared/db/migrations/

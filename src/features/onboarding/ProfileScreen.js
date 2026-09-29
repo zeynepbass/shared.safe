@@ -1,10 +1,9 @@
-import { useSQLiteContext } from 'expo-sqlite';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { saveProfile } from '@/db';
+import { saveProfile, useDb } from '@/shared/db';
 import { useSettings } from '@/features/settings/SettingsProvider';
 import { CURRENCIES, CURRENCY_CODES } from '@/shared/lib/money';
 import { useTheme, useThemedStyles } from '@/shared/theme';
@@ -27,14 +26,14 @@ const CURRENCY_OPTIONS = CURRENCY_CODES.map((code) => ({
 
 export default function ProfileScreen({ mode = 'create' }) {
   const { t } = useTranslation();
-  const db = useSQLiteContext();
+  const db = useDb();
   const { avatarColors } = useTheme();
   const styles = useThemedStyles(createStyles);
   const settings = useSettings();
   const isEdit = mode === 'edit';
 
   const [name, setName] = useState(settings.profile.name);
-  const [color, setColor] = useState(settings.profile.color);
+  const [color, setColor] = useState(settings.profile.avatarColor);
   const [currency, setCurrency] = useState(settings.defaultCurrency);
   const [touched, setTouched] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -47,7 +46,12 @@ export default function ProfileScreen({ mode = 'create' }) {
     if (!trimmed) return;
     setSaving(true);
     try {
-      await saveProfile(db, { name: trimmed, color, currency, completeOnboarding: !isEdit });
+      await saveProfile(db, {
+        name: trimmed,
+        avatarColor: color,
+        defaultCurrency: currency,
+        completeOnboarding: !isEdit,
+      });
       if (isEdit) router.back();
       else router.replace('/groups');
     } finally {

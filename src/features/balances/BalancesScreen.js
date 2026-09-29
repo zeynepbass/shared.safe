@@ -1,11 +1,16 @@
-import { useSQLiteContext } from 'expo-sqlite';
 import { useLocalSearchParams } from 'expo-router';
 import { ArrowRight, Check, CheckCheck } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { getGroupSnapshot, recordSettlement, softDeleteSettlement, useDbQuery } from '@/db';
+import {
+  getGroupSnapshot,
+  recordSettlement,
+  softDeleteSettlement,
+  useDb,
+  useDbQuery,
+} from '@/shared/db';
 import { simplifyDebts } from '@/domain/simplify';
 import { memberLabel, useGroupSummary } from '@/features/groups/useGroupSummary';
 import { todayISO } from '@/shared/lib/dates';
@@ -30,7 +35,7 @@ const TABLES = ['members', 'expenses', 'settlements', 'groups'];
 export default function BalancesScreen() {
   const { groupId } = useLocalSearchParams();
   const { t } = useTranslation();
-  const db = useSQLiteContext();
+  const db = useDb();
   const snackbar = useSnackbar();
   const formatMoney = useFormatMoney();
   const styles = useThemedStyles(createStyles);
@@ -80,7 +85,7 @@ export default function BalancesScreen() {
               amount: formatMoney(value, currency, { signed: true }),
             })}
           >
-            <Avatar name={member.name} color={member.color} size="md" />
+            <Avatar name={member.name} color={member.avatarColor} size="md" />
             <View style={styles.memberBody}>
               <AppText variant="bodyLg">{label}</AppText>
               <BalanceBar value={value} max={maxAbs} />
@@ -111,9 +116,9 @@ export default function BalancesScreen() {
                 })}
               >
                 <View style={styles.pair}>
-                  <Avatar name={from?.name} color={from?.color} size="md" />
+                  <Avatar name={from?.name} color={from?.avatarColor} size="md" />
                   <Icon icon={ArrowRight} size={14} color="textSubtle" />
-                  <Avatar name={to?.name} color={to?.color} size="md" />
+                  <Avatar name={to?.name} color={to?.avatarColor} size="md" />
                 </View>
                 <View>
                   <AppText variant="caption" color="textMuted">

@@ -23,7 +23,11 @@ module.exports = defineConfig([
   {
     files: ['**/__tests__/**/*.js', '**/*.test.js'],
     languageOptions: {
-      globals: { describe: 'readonly', it: 'readonly', expect: 'readonly' },
+      globals: { describe: 'readonly', it: 'readonly', expect: 'readonly', jest: 'readonly' },
     },
+  },
+  {
+    files: ['src/shared/db/testing/**/*.js'],
+    languageOptions: { globals: { __dirname: 'readonly' } },
   },
 ]);

@@ -1,11 +1,17 @@
-import { useSQLiteContext } from 'expo-sqlite';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Calendar, Check, ChevronDown, ChevronRight, Receipt, Split } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { createExpense, getExpense, getGroupSnapshot, updateExpense, useDbQuery } from '@/db';
+import {
+  createExpense,
+  getExpense,
+  getGroupSnapshot,
+  updateExpense,
+  useDb,
+  useDbQuery,
+} from '@/shared/db';
 import { memberLabel, selfMember } from '@/features/groups/useGroupSummary';
 import { todayISO } from '@/shared/lib/dates';
 import { applyKeypadInput, formatAmountInput } from '@/shared/lib/money';
@@ -54,7 +60,7 @@ async function loadForm(db, groupId, expenseId) {
 export default function AddExpenseScreen() {
   const { groupId, expenseId } = useLocalSearchParams();
   const { t, i18n } = useTranslation();
-  const db = useSQLiteContext();
+  const db = useDb();
   const snackbar = useSnackbar();
   const dates = useDateFormat();
   const styles = useThemedStyles(createStyles);
@@ -77,7 +83,7 @@ export default function AddExpenseScreen() {
       groupId,
       expenseId: expense?.id ?? null,
       amountInput: expense ? formatAmountInput(expense.amount, { locale }) : '',
-      title: expense?.title ?? '',
+      title: expense?.description ?? '',
       category: expense?.category ?? 'market',
       payerId: expense?.payerId ?? selfMember(members)?.id ?? members[0]?.id,
       spentOn: expense?.spentOn ?? todayISO(),
@@ -87,8 +93,8 @@ export default function AddExpenseScreen() {
         expense?.splitType ?? 'equal',
         expense?.shares ?? [],
       ),
-      receiptUri: expense?.receiptUri ?? null,
-      originalReceiptUri: expense?.receiptUri ?? null,
+      receiptUri: expense?.receiptPath ?? null,
+      originalReceiptUri: expense?.receiptPath ?? null,
     });
   }, [members, data, draft?.key, draftKey, groupId, locale]);
 
@@ -135,13 +141,13 @@ export default function AddExpenseScreen() {
     setSaving(true);
     const input = {
       groupId,
-      title: draft.title.trim() || t(`categories.${draft.category}`),
+      description: draft.title.trim() || t(`categories.${draft.category}`),
       amount: total,
       category: draft.category,
       payerId: draft.payerId,
       splitType: draft.splitType,
       spentOn: draft.spentOn,
-      receiptUri: draft.receiptUri,
+      receiptPath: draft.receiptUri,
       shares: split.shares,
     };
     try {
@@ -253,7 +259,7 @@ export default function AddExpenseScreen() {
               accessibilityLabel={`${t('expenseForm.payer')}: ${memberLabel(payer, t)}`}
             >
               <View style={styles.cellValue}>
-                <Avatar name={payer?.name} color={payer?.color} size="xs" />
+                <Avatar name={payer?.name} color={payer?.avatarColor} size="xs" />
                 <AppText variant="bodyStrong">{memberLabel(payer, t)}</AppText>
                 <Icon icon={ChevronDown} size={14} color="textMuted" />
               </View>
@@ -307,7 +313,7 @@ export default function AddExpenseScreen() {
         options={members.map((m) => ({
           value: m.id,
           label: memberLabel(m, t),
-          leading: <Avatar name={m.name} color={m.color} size="sm" />,
+          leading: <Avatar name={m.name} color={m.avatarColor} size="sm" />,
         }))}
       />
       <OptionSheet

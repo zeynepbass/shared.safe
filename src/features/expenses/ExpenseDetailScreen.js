@@ -1,10 +1,16 @@
-import { useSQLiteContext } from 'expo-sqlite';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Pencil, Trash2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Image, StyleSheet, View } from 'react-native';
 
-import { getExpense, getGroupSnapshot, restoreExpense, softDeleteExpense, useDbQuery } from '@/db';
+import {
+  getExpense,
+  getGroupSnapshot,
+  restoreExpense,
+  softDeleteExpense,
+  useDb,
+  useDbQuery,
+} from '@/shared/db';
 import { memberLabel } from '@/features/groups/useGroupSummary';
 import { formatAmountInput } from '@/shared/lib/money';
 import { useDateFormat } from '@/shared/lib/useDateFormat';
@@ -37,7 +43,7 @@ async function loadDetail(db, groupId, expenseId) {
 export default function ExpenseDetailScreen() {
   const { groupId, expenseId } = useLocalSearchParams();
   const { t, i18n } = useTranslation();
-  const db = useSQLiteContext();
+  const db = useDb();
   const snackbar = useSnackbar();
   const dates = useDateFormat();
   const styles = useThemedStyles(createStyles);
@@ -116,7 +122,7 @@ export default function ExpenseDetailScreen() {
               })}
             </AppText>
             <AppText variant="headerTitle" style={styles.title}>
-              {expense.title}
+              {expense.description}
             </AppText>
           </View>
         </View>
@@ -128,7 +134,7 @@ export default function ExpenseDetailScreen() {
                 label: t('expenseDetail.payer'),
                 value: (
                   <View style={styles.inline}>
-                    <Avatar name={payer?.name} color={payer?.color} size="xs" />
+                    <Avatar name={payer?.name} color={payer?.avatarColor} size="xs" />
                     <AppText variant="bodyStrong">{memberLabel(payer, t)}</AppText>
                   </View>
                 ),
@@ -139,11 +145,11 @@ export default function ExpenseDetailScreen() {
         />
       </View>
 
-      {expense.receiptUri ? (
+      {expense.receiptPath ? (
         <View style={styles.receipt}>
           <BlueprintGrid cell={20} style={styles.receiptFrame}>
             <Image
-              source={{ uri: expense.receiptUri }}
+              source={{ uri: expense.receiptPath }}
               style={StyleSheet.absoluteFill}
               resizeMode="contain"
               accessibilityLabel={t('expenseDetail.receipt')}
@@ -168,7 +174,7 @@ export default function ExpenseDetailScreen() {
         return (
           <ListItem
             key={share.memberId}
-            leading={<Avatar name={member?.name} color={member?.color} size="md" />}
+            leading={<Avatar name={member?.name} color={member?.avatarColor} size="md" />}
             title={memberLabel(member, t)}
             subtitle={weightCaption(share)}
             trailing={<Money minor={share.amount} currency={currency} />}

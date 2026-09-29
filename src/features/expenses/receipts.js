@@ -1,7 +1,7 @@
 import { Directory, File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 
-import { newId } from '@/db/ids';
+import { newId } from '@/shared/db/ids';
 
 const PICKER_OPTIONS = { mediaTypes: ['images'], quality: 0.6, allowsEditing: false };
 

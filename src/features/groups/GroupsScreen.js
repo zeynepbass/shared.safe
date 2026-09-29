@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { listGroupSnapshots, useDbQuery } from '@/db';
+import { listGroupSnapshots, useDbQuery } from '@/shared/db';
 import { useSettings } from '@/features/settings/SettingsProvider';
 import { currencySymbol } from '@/shared/lib/money';
 import { useDateFormat } from '@/shared/lib/useDateFormat';
@@ -89,7 +89,7 @@ export default function GroupsScreen() {
     const payer = group.members.find((m) => m.id === last.payerId);
     return t('groups.lastExpense', {
       payer: memberLabel(payer, t),
-      title: last.title,
+      title: last.description,
       date: dates.short(last.spentOn),
     });
   };

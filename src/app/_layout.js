@@ -8,7 +8,7 @@ import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { DatabaseProvider } from '@/db';
+import { DatabaseProvider } from '@/shared/db';
 import { SettingsProvider, useSettings } from '@/features/settings/SettingsProvider';
 import { fontAssets, ThemeProvider, useTheme } from '@/shared/theme';
 import { SnackbarProvider } from '@/shared/ui';

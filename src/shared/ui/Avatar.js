@@ -53,7 +53,7 @@ export function AvatarGroup({ members, size = 'xs', max = 6, style }) {
       accessibilityLabel={t('avatarGroup.label', { count: members.length, names })}
     >
       {visible.map((member) => (
-        <Avatar key={member.id} name={member.name} color={member.color} size={size} />
+        <Avatar key={member.id} name={member.name} color={member.avatarColor} size={size} />
       ))}
       {hidden > 0 ? (
         <View style={[themed.overflow, { minWidth: box, height: box }]}>

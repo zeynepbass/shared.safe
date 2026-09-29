@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
-import { getGroupSnapshot, useDbQuery } from '@/db';
+import { getGroupSnapshot, useDbQuery } from '@/shared/db';
 import { allocateProportionally, computeSplit, FULL_PERCENT } from '@/domain/split';
 import { memberLabel } from '@/features/groups/useGroupSummary';
 import { currencySymbol, formatAmountInput, parseAmountInput } from '@/shared/lib/money';
@@ -32,6 +32,7 @@ function defaultWeights(type, total, participants) {
     allocateProportionally(
       sum,
       included.map(() => 1),
+      included.map((p) => p.memberId),
     );
   const values =
     type === 'amount'
@@ -201,7 +202,7 @@ export default function SplitScreen() {
                 onChange={(value) => setIncluded(member.id, value)}
                 accessibilityLabel={label}
               />
-              <Avatar name={member.name} color={member.color} size="md" />
+              <Avatar name={member.name} color={member.avatarColor} size="md" />
               <View style={styles.flex}>
                 <AppText variant="bodyLg">{label}</AppText>
                 <AppText variant="caption" color="textMuted">

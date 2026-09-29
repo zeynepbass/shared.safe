@@ -1,33 +1,45 @@
-import { useSQLiteContext } from 'expo-sqlite';
 import { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { getAllSettings, SETTING_KEYS, setSetting, useDbQuery } from '@/db';
+import {
+  getAllSettings,
+  getLocalUser,
+  SETTING_KEYS,
+  setDefaultCurrency,
+  setSetting,
+  useDb,
+  useDbQuery,
+} from '@/shared/db';
 import { detectLanguage } from '@/shared/i18n';
 import { avatarColors, useThemeContext } from '@/shared/theme';
 
 const SettingsContext = createContext(null);
 
+function loadSettings(db) {
+  return { values: getAllSettings(db), user: getLocalUser(db) };
+}
+
 export function SettingsProvider({ children }) {
-  const db = useSQLiteContext();
+  const db = useDb();
   const { i18n } = useTranslation();
   const { setPreference } = useThemeContext();
-  const { data: raw, loading } = useDbQuery(getAllSettings, [], ['settings']);
+  const { data, loading } = useDbQuery(loadSettings, [], ['settings', 'users']);
 
   const settings = useMemo(() => {
-    const values = raw ?? {};
+    const values = data?.values ?? {};
+    const user = data?.user;
     return {
       loaded: !loading,
       onboarded: values[SETTING_KEYS.onboarded] === '1',
       profile: {
-        name: values[SETTING_KEYS.profileName] ?? '',
-        color: values[SETTING_KEYS.profileColor] ?? avatarColors[3],
+        name: user?.name ?? '',
+        avatarColor: user?.avatarColor ?? avatarColors[3],
       },
-      defaultCurrency: values[SETTING_KEYS.defaultCurrency] ?? 'TRY',
+      defaultCurrency: user?.defaultCurrency ?? 'TRY',
       theme: values[SETTING_KEYS.theme] ?? 'system',
       language: values[SETTING_KEYS.language] ?? detectLanguage(),
     };
-  }, [raw, loading]);
+  }, [data, loading]);
 
   useEffect(() => {
     setPreference(settings.theme);
@@ -37,7 +49,13 @@ export function SettingsProvider({ children }) {
     if (i18n.language !== settings.language) i18n.changeLanguage(settings.language);
   }, [settings.language, i18n]);
 
-  const update = useCallback((key, value) => setSetting(db, SETTING_KEYS[key], value), [db]);
+  const update = useCallback(
+    (key, value) => {
+      if (key === 'defaultCurrency') setDefaultCurrency(db, value);
+      else setSetting(db, SETTING_KEYS[key], value);
+    },
+    [db],
+  );
 
   const value = useMemo(() => ({ ...settings, update }), [settings, update]);
 

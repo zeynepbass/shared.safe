@@ -35,7 +35,7 @@ export default function SettingsScreen() {
     <Screen padded={false} header={<Header title={t('settings.header')} />}>
       <View style={styles.profileWrap}>
         <Card corners style={styles.profile}>
-          <Avatar name={settings.profile.name} color={settings.profile.color} size="md" />
+          <Avatar name={settings.profile.name} color={settings.profile.avatarColor} size="md" />
           <View style={styles.flex}>
             <AppText variant="headerTitle">{settings.profile.name}</AppText>
             <AppText variant="caption" color="textMuted">

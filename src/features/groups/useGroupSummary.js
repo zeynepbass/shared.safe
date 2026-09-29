@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { computeBalances } from '@/domain/balances';
 
 export function selfMember(members) {
-  return members.find((m) => m.isSelf) ?? null;
+  return members.find((m) => m.isLocalUser) ?? null;
 }
 
 export function summarizeGroup(snapshot) {

@@ -1,10 +1,10 @@
-import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { subscribe } from './changes';
+import { useDb } from './DatabaseProvider';
 
 export function useDbQuery(query, deps, tables) {
-  const db = useSQLiteContext();
+  const db = useDb();
   const [state, setState] = useState({ data: undefined, loading: true, error: null });
   const queryRef = useRef(query);
   const tablesKey = tables.join('|');

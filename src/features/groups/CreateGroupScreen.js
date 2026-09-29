@@ -1,10 +1,9 @@
-import { useSQLiteContext } from 'expo-sqlite';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { createGroup } from '@/db';
+import { createGroup, useDb } from '@/shared/db';
 import { useSettings } from '@/features/settings/SettingsProvider';
 import { CURRENCIES, CURRENCY_CODES } from '@/shared/lib/money';
 import { useThemedStyles } from '@/shared/theme';
@@ -29,7 +28,7 @@ const CURRENCY_OPTIONS = CURRENCY_CODES.map((code) => ({
 
 export default function CreateGroupScreen() {
   const { t } = useTranslation();
-  const db = useSQLiteContext();
+  const db = useDb();
   const styles = useThemedStyles(createStyles);
   const { profile, defaultCurrency } = useSettings();
 

@@ -307,7 +307,7 @@ function AvatarSection() {
   const members = MEMBERS.map((name, i) => ({
     id: name,
     name,
-    color: avatarColors[i % avatarColors.length],
+    avatarColor: avatarColors[i % avatarColors.length],
   }));
 
   return (

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { SectionList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getGroupSnapshot, useDbQuery } from '@/db';
+import { getGroupSnapshot, useDbQuery } from '@/shared/db';
 import { effectOnMember } from '@/domain/balances';
 import { categoryIcon } from '@/features/expenses/categories';
 import { currencySymbol } from '@/shared/lib/money';
@@ -148,9 +148,9 @@ export default function GroupDetailScreen() {
       <ListItem
         onPress={() => router.push(`/groups/${group.id}/expense/${expense.id}`)}
         leading={<IconBox icon={categoryIcon(expense.category)} />}
-        title={expense.title}
+        title={expense.description}
         titleAccessory={
-          expense.receiptUri ? <Icon icon={Paperclip} size={14} color="textMuted" /> : null
+          expense.receiptPath ? <Icon icon={Paperclip} size={14} color="textMuted" /> : null
         }
         subtitle={paidBy}
         trailingCaption={

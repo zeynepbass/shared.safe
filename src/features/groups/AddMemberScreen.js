@@ -1,10 +1,9 @@
-import { useSQLiteContext } from 'expo-sqlite';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { addMember, getGroup, useDbQuery } from '@/db';
+import { addMember, getGroup, useDb, useDbQuery } from '@/shared/db';
 import { useTheme, useThemedStyles } from '@/shared/theme';
 import {
   Avatar,
@@ -20,7 +19,7 @@ import {
 export default function AddMemberScreen() {
   const { groupId } = useLocalSearchParams();
   const { t } = useTranslation();
-  const db = useSQLiteContext();
+  const db = useDb();
   const snackbar = useSnackbar();
   const { avatarColors } = useTheme();
   const styles = useThemedStyles(createStyles);
@@ -39,7 +38,7 @@ export default function AddMemberScreen() {
     if (!trimmed) return;
     setSaving(true);
     try {
-      await addMember(db, groupId, { name: trimmed, color });
+      await addMember(db, groupId, { name: trimmed, avatarColor: color });
       snackbar.show({ message: t('member.added', { name: trimmed }) });
       router.back();
     } finally {

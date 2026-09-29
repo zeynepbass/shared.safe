@@ -1,0 +1,42 @@
+# Tasarım dosyaları (repoya dahil edilmez)
+design/
+
+# Bağımlılıklar
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+/ios
+/android
+
+# Metro
+.metro-health-check*
+
+# Loglar
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# Ortam değişkenleri
+.env
+.env*.local
+
+# Test
+coverage/
+
+# macOS
+.DS_Store
+*.pem

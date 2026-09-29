@@ -1,0 +1,237 @@
+{
+  "common": {
+    "appName": "Ortak Kasa",
+    "continue": "Continue",
+    "skip": "Skip",
+    "save": "Save",
+    "cancel": "Cancel",
+    "done": "Done",
+    "back": "Back",
+    "close": "Close",
+    "undo": "Undo",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "you": "You",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "all": "All",
+    "none": "None",
+    "error": "Something went wrong. Please try again."
+  },
+  "keypad": {
+    "backspace": "Delete",
+    "decimal": "Decimal separator"
+  },
+  "theme": {
+    "title": "Theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "language": {
+    "tr": "Türkçe",
+    "en": "English"
+  },
+  "date": {
+    "months": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "weekdays": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    "dayMonth": "{{month}} {{day}}",
+    "dayMonthWeekday": "{{weekday}}, {{month}} {{day}}",
+    "full": "{{month}} {{day}}, {{year}}",
+    "relativeHeader": "{{relative}} · {{date}}",
+    "pick": "Pick a date",
+    "other": "Another date…"
+  },
+  "onboarding": {
+    "slides": {
+      "offline": {
+        "figure": "Fig. 01",
+        "caption": "On device · No internet needed",
+        "eyebrow": "01 / Offline",
+        "title": "Works without internet",
+        "body": "Expenses are saved right on your device. Connection or not, you can keep the kitty anywhere."
+      },
+      "receipt": {
+        "figure": "Fig. 02",
+        "caption": "Amount · Date · Receipt",
+        "eyebrow": "02 / Receipts",
+        "title": "Attach the receipt",
+        "body": "Snap a photo of the receipt and keep it with the expense, so nobody loses track of who paid what."
+      }
+    },
+    "start": "Get started",
+    "progress": "Step {{current}} of {{total}}"
+  },
+  "profile": {
+    "header": "Profile",
+    "editHeader": "Edit profile",
+    "title": "Create your profile",
+    "editTitle": "Your profile",
+    "body": "Your name and color represent you in your groups. No email or phone number needed.",
+    "colorLabel": "Profile color",
+    "nameLabel": "Your name",
+    "namePlaceholder": "e.g. Deniz",
+    "nameRequired": "Please enter your name.",
+    "currencyLabel": "Default currency"
+  },
+  "groups": {
+    "title": "Groups",
+    "totalNet": "Total net balance",
+    "summary": "{{count}} groups · you owe in {{debtCount}}",
+    "summary_one": "{{count}} group · you owe in {{debtCount}}",
+    "summaryNoDebt": "{{count}} groups · you owe nothing",
+    "summaryOtherCurrency": "Only {{currency}} groups are totalled",
+    "receivable": "You are owed",
+    "payable": "You owe",
+    "mine": "My groups",
+    "noExpenses": "No expenses yet",
+    "lastExpense": "{{payer}} · {{title}} · {{date}}",
+    "statusCreditor": "you are owed",
+    "statusDebtor": "you owe",
+    "statusSettled": "settled",
+    "newGroup": "New group",
+    "settings": "Settings",
+    "emptyTitle": "No groups yet",
+    "emptyBody": "Open your first shared kitty with roommates, travel buddies or your partner.",
+    "createGroup": "Create group"
+  },
+  "groupTypes": {
+    "home": { "title": "Home", "subtitle": "Roommates" },
+    "trip": { "title": "Trip", "subtitle": "Travel group" },
+    "couple": { "title": "Couple", "subtitle": "Two-person kitty" },
+    "other": { "title": "Other", "subtitle": "Club, office, event" }
+  },
+  "groupForm": {
+    "header": "New group",
+    "nameLabel": "Group name",
+    "namePlaceholder": "e.g. Kaş 2026",
+    "nameRequired": "Give your group a name.",
+    "typeLabel": "Type",
+    "currencyLabel": "Currency",
+    "info": "The group is stored on this device only. You can add members by name in the next step.",
+    "submit": "Create group"
+  },
+  "groupDetail": {
+    "subtitle": "{{type}} · {{count}} people",
+    "currency": "Currency {{symbol}}",
+    "netBalance": "Net balance",
+    "owedToYou": "The group owes you {{amount}} in total.",
+    "youOwe": "You owe the group {{amount}} in total.",
+    "settled": "You're all settled up.",
+    "settleUp": "Settle up",
+    "addMember": "Add member",
+    "addExpense": "Expense",
+    "paidBySelf": "You paid · {{amount}}",
+    "paidBy": "{{name}} paid · {{amount}}",
+    "owe": "you owe",
+    "lent": "you lent",
+    "notInvolved": "not involved",
+    "settlement": "Settlement payment",
+    "settlementTitle": "{{from}} → {{to}}",
+    "emptyTitle": "No expenses yet",
+    "emptyBody": "Add the first expense; splits and balances are calculated automatically.",
+    "emptyAction": "Add expense",
+    "receiptAttached": "Receipt attached"
+  },
+  "member": {
+    "header": "Add member",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g. Ece",
+    "nameRequired": "Enter the member's name.",
+    "colorLabel": "Member color",
+    "submit": "Add member",
+    "added": "{{name}} was added to the group"
+  },
+  "categories": {
+    "market": "Groceries",
+    "food": "Food",
+    "bills": "Bills",
+    "home": "Home",
+    "transport": "Transport",
+    "stay": "Lodging",
+    "fun": "Fun",
+    "other": "Other"
+  },
+  "expenseForm": {
+    "header": "Add expense",
+    "editHeader": "Edit expense",
+    "titlePlaceholder": "Description",
+    "payer": "Paid by",
+    "date": "Date",
+    "split": "Split",
+    "splitSummary": "{{type}} · {{count}} people",
+    "splitInvalid": "Finish the split",
+    "receipt": "Receipt",
+    "receiptAttached": "Receipt added",
+    "receiptTake": "Take photo",
+    "receiptPick": "Choose from library",
+    "receiptRemove": "Remove receipt",
+    "receiptPermission": "Please grant permission to attach a receipt.",
+    "choosePayer": "Who paid?",
+    "amountLabel": "Amount",
+    "saved": "Expense saved",
+    "updated": "Expense updated"
+  },
+  "splitTypes": {
+    "equal": "Equal",
+    "amount": "Amount",
+    "percent": "Percent",
+    "shares": "Shares"
+  },
+  "split": {
+    "header": "Split",
+    "subtitle": "{{amount}} · {{title}}",
+    "included": "Who's in",
+    "remaining": "Remaining",
+    "sharesUnit": "{{count}} shares",
+    "percentOf": "{{value}}%",
+    "inputLabel": "Value for {{name}}"
+  },
+  "expenseDetail": {
+    "header": "Expense",
+    "eyebrow": "{{category}} · {{group}}",
+    "payer": "Paid by",
+    "date": "Date",
+    "receipt": "Receipt image",
+    "receiptCaption": "Receipt · stored on device",
+    "split": "Split",
+    "deleted": "Expense deleted",
+    "notFound": "This expense no longer exists."
+  },
+  "balances": {
+    "header": "Balances",
+    "members": "Member balances",
+    "suggested": "Suggested payments",
+    "fewest": "fewest transfers",
+    "paid": "Paid",
+    "transfer": "{{from}} → {{to}}",
+    "recorded": "Payment recorded",
+    "allSettled": "Everyone is settled. No payments to suggest.",
+    "footnote": "“Paid” records a payment and updates balances right away. You can undo it if you tap it by mistake.",
+    "memberA11y": "{{name}}, balance {{amount}}",
+    "transferA11y": "{{from}} should pay {{to}} {{amount}}"
+  },
+  "settings": {
+    "header": "Settings",
+    "localProfile": "Your profile stays on this device",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "defaultCurrency": "Default currency",
+    "language": "Language",
+    "about": "About",
+    "version": "Version {{version}}"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Ortak Kasa",
+    "slug": "ortak-kasa",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F2F2F3",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 120,
+          "resizeMode": "contain",
+          "backgroundColor": "#F2F2F3",
+          "dark": {
+            "image": "./assets/splash-icon.png",
+            "backgroundColor": "#131517"
+          }
+        }
+      ],
+      "expo-localization",
+      "expo-sqlite",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Fişi harcamaya eklemek için fotoğraflarına erişim gerekiyor.",
+          "cameraPermission": "Fişin fotoğrafını çekmek için kamera erişimi gerekiyor.",
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "scheme": "ortakkasa"
+  }
+}

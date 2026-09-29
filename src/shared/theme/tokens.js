@@ -17,8 +17,11 @@ export const palette = {
     dangerSoft: '#FBE9E8',
     success: '#227C45',
     successSoft: '#E4F2E9',
-    toast: '#1D1F20',
-    textOnToast: '#F2F2F3',
+    textOnDanger: '#FFFFFF',
+    inverse: '#1D1F20',
+    textOnInverse: '#F2F2F3',
+    primaryOnInverse: '#9CC0E4',
+    overlay: 'rgba(29, 31, 32, 0.4)',
     skeleton: '#E4E4E5',
     cornerMark: '#9D9E9F',
     grid: '#E1E0E1',
@@ -41,8 +44,11 @@ export const palette = {
     dangerSoft: '#3A2220',
     success: '#78CD90',
     successSoft: '#1D3325',
-    toast: '#E4E6E8',
-    textOnToast: '#131517',
+    textOnDanger: '#131517',
+    inverse: '#E4E6E8',
+    textOnInverse: '#131517',
+    primaryOnInverse: '#3F6386',
+    overlay: 'rgba(0, 0, 0, 0.6)',
     skeleton: '#1E2123',
     cornerMark: '#5E6062',
     grid: '#1E1F21',
@@ -50,6 +56,8 @@ export const palette = {
 };
 
 export const avatarColors = ['#B5D9FD', '#94BCE3', '#749DC4', '#597EA3', '#416180', '#2C455D'];
+
+export const avatarInk = { onLight: '#1D1F20', onDark: '#FFFFFF' };
 
 export const spacing = {
   none: 0,
@@ -68,15 +76,61 @@ export const layout = {
   gutter: 20,
   buttonHeight: 56,
   inputHeight: 48,
+  inputHeightLg: 52,
   rowHeight: 64,
   headerHeight: 52,
+  headerSide: 80,
   iconBox: 36,
+  iconButton: 36,
+  chipHeight: 36,
+  segmentHeight: 44,
+  segmentHeightSm: 32,
+  numpadKey: 52,
+  snackbarHeight: 48,
+  bannerHeight: 32,
+  syncBadge: 18,
+  sheetHandleWidth: 36,
+  sheetHandleHeight: 4,
+  sheetMaxHeight: 480,
+  emptyFigure: 112,
+  readableWidth: 320,
   hitSlop: 8,
+};
+
+export const controlHeight = { sm: 32, md: 44, lg: 56 };
+
+export const iconSize = { xs: 12, sm: 14, md: 16, lg: 18, xl: 20, xxl: 22, figure: 28 };
+
+export const avatarSize = {
+  xs: { box: 18, fontSize: 9, lineHeight: 11 },
+  sm: { box: 24, fontSize: 11, lineHeight: 13 },
+  md: { box: 32, fontSize: 14, lineHeight: 16 },
+  lg: { box: 96, fontSize: 40, lineHeight: 46 },
 };
 
 export const radius = {
   none: 0,
   xs: 2,
+  control: 0,
+  card: 0,
+  chip: 0,
+  sheet: 0,
+  badge: 2,
+};
+
+export const opacity = {
+  pressed: 0.75,
+  pressedSubtle: 0.6,
+  disabled: 0.45,
+  skeletonLow: 0.5,
+};
+
+export const motion = {
+  fast: 150,
+  base: 200,
+  slow: 700,
+  snackbar: 5000,
+  snackbarScreenReader: 10000,
 };
 
 export const borderWidth = {
@@ -103,8 +157,11 @@ export const typography = {
   amount: { fontFamily: fontFamily.display, fontSize: 17, lineHeight: 22 },
   bodyLg: { fontFamily: fontFamily.bodyMedium, fontSize: 17, lineHeight: 22 },
   body: { fontFamily: fontFamily.body, fontSize: 15, lineHeight: 21 },
+  subheading: { fontFamily: fontFamily.display, fontSize: 22, lineHeight: 26 },
   bodyStrong: { fontFamily: fontFamily.bodySemi, fontSize: 15, lineHeight: 21 },
   caption: { fontFamily: fontFamily.body, fontSize: 13, lineHeight: 17 },
+  captionStrong: { fontFamily: fontFamily.bodySemi, fontSize: 13, lineHeight: 17 },
+  micro: { fontFamily: fontFamily.bodyMedium, fontSize: 11, lineHeight: 15 },
   button: { fontFamily: fontFamily.displaySemi, fontSize: 17, lineHeight: 22 },
   overline: {
     fontFamily: fontFamily.displaySemi,

@@ -11,7 +11,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { DatabaseProvider } from '@/db';
 import { SettingsProvider, useSettings } from '@/features/settings/SettingsProvider';
 import { fontAssets, ThemeProvider, useTheme } from '@/shared/theme';
-import { ToastProvider } from '@/shared/ui';
+import { SnackbarProvider } from '@/shared/ui';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -32,7 +32,7 @@ function AppStack() {
   if (!loaded) return null;
 
   return (
-    <ToastProvider>
+    <SnackbarProvider>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
@@ -45,7 +45,7 @@ function AppStack() {
         <Stack.Screen name="groups/[groupId]/add-expense" options={MODAL} />
         <Stack.Screen name="profile/edit" options={MODAL} />
       </Stack>
-    </ToastProvider>
+    </SnackbarProvider>
   );
 }
 

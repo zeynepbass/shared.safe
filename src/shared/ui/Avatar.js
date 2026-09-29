@@ -3,34 +3,31 @@ import { StyleSheet, View } from 'react-native';
 
 import { readableTextOn } from '@/shared/lib/color';
 import { initialOf } from '@/shared/lib/text';
-import { useTheme } from '@/shared/theme';
+import { useTheme, useThemedStyles } from '@/shared/theme';
 
 import { AppText } from './AppText';
 
-const SIZES = {
-  xs: { box: 18, font: 9 },
-  sm: { box: 24, font: 11 },
-  md: { box: 32, font: 14 },
-  lg: { box: 96, font: 40 },
-};
-
-export function Avatar({ name, color, size = 'md', style }) {
-  const { avatarColors, fontFamily } = useTheme();
+export function Avatar({ name, color, size = 'md', accessibilityLabel, style }) {
+  const { avatarColors, avatarInk, avatarSize, fontFamily } = useTheme();
   const { i18n } = useTranslation();
   const bg = color ?? avatarColors[3];
-  const { box, font } = SIZES[size];
+  const { box, fontSize, lineHeight } = avatarSize[size];
+  const labelled = Boolean(accessibilityLabel);
 
   return (
     <View
-      accessible={false}
+      accessible={labelled}
+      accessibilityRole={labelled ? 'image' : undefined}
+      accessibilityLabel={accessibilityLabel}
+      importantForAccessibility={labelled ? 'yes' : 'no-hide-descendants'}
       style={[styles.box, { width: box, height: box, backgroundColor: bg }, style]}
     >
       <AppText
         style={{
           fontFamily: fontFamily.display,
-          fontSize: font,
-          lineHeight: font * 1.15,
-          color: readableTextOn(bg),
+          fontSize,
+          lineHeight,
+          color: readableTextOn(bg, { dark: avatarInk.onLight, light: avatarInk.onDark }),
         }}
       >
         {initialOf(name, i18n.language)}
@@ -39,18 +36,49 @@ export function Avatar({ name, color, size = 'md', style }) {
   );
 }
 
-export function AvatarStack({ members, size = 'xs', max = 6 }) {
+export function AvatarGroup({ members, size = 'xs', max = 6, style }) {
+  const { t } = useTranslation();
+  const { avatarSize } = useTheme();
+  const themed = useThemedStyles(createStyles);
   const visible = members.slice(0, max);
+  const hidden = members.length - visible.length;
+  const { box, fontSize, lineHeight } = avatarSize[size];
+  const names = members.map((m) => m.label ?? m.name).join(', ');
+
   return (
-    <View style={styles.stack}>
+    <View
+      style={[themed.group, style]}
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={t('avatarGroup.label', { count: members.length, names })}
+    >
       {visible.map((member) => (
         <Avatar key={member.id} name={member.name} color={member.color} size={size} />
       ))}
+      {hidden > 0 ? (
+        <View style={[themed.overflow, { minWidth: box, height: box }]}>
+          <AppText color="textMuted" style={[themed.overflowText, { fontSize, lineHeight }]}>
+            +{hidden}
+          </AppText>
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   box: { alignItems: 'center', justifyContent: 'center' },
-  stack: { flexDirection: 'row', gap: 2 },
 });
+
+const createStyles = ({ colors, spacing, borderWidth, fontFamily }) =>
+  StyleSheet.create({
+    group: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },
+    overflow: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.xxs,
+      borderWidth: borderWidth.hairline,
+      borderColor: colors.borderStrong,
+    },
+    overflowText: { fontFamily: fontFamily.display },
+  });

@@ -19,10 +19,10 @@ import {
   Icon,
   Money,
   Screen,
-  ScreenHeader,
+  Header,
   SectionHeader,
   useFormatMoney,
-  useToast,
+  useSnackbar,
 } from '@/shared/ui';
 
 const TABLES = ['members', 'expenses', 'settlements', 'groups'];
@@ -31,7 +31,7 @@ export default function BalancesScreen() {
   const { groupId } = useLocalSearchParams();
   const { t } = useTranslation();
   const db = useSQLiteContext();
-  const toast = useToast();
+  const snackbar = useSnackbar();
   const formatMoney = useFormatMoney();
   const styles = useThemedStyles(createStyles);
   const { data: snapshot } = useDbQuery((d) => getGroupSnapshot(d, groupId), [groupId], TABLES);
@@ -43,7 +43,7 @@ export default function BalancesScreen() {
     [summary],
   );
 
-  if (!summary) return <Screen header={<ScreenHeader title={t('balances.header')} />} />;
+  if (!summary) return <Screen header={<Header title={t('balances.header')} />} />;
 
   const { group, members, balances } = summary;
   const currency = group.currency;
@@ -58,18 +58,14 @@ export default function BalancesScreen() {
       amount: transfer.amount,
       paidOn: todayISO(),
     });
-    toast.show({
+    snackbar.show({
       message: t('balances.recorded'),
-      actionLabel: t('common.undo'),
-      onAction: () => softDeleteSettlement(db, id),
+      onUndo: () => softDeleteSettlement(db, id),
     });
   };
 
   return (
-    <Screen
-      padded={false}
-      header={<ScreenHeader title={t('balances.header')} subtitle={group.name} />}
-    >
+    <Screen padded={false} header={<Header title={t('balances.header')} subtitle={group.name} />}>
       <SectionHeader title={t('balances.members')} />
       {members.map((member) => {
         const value = balances.get(member.id) ?? 0;

@@ -5,18 +5,31 @@ import { useTheme, useThemedStyles } from '@/shared/theme';
 
 import { AppText } from './AppText';
 
-export const TextField = forwardRef(function TextField(
-  { label, prefix, error, align = 'left', size = 'md', style, inputStyle, ...inputProps },
+export const Input = forwardRef(function Input(
+  {
+    label,
+    prefix,
+    suffix,
+    helper,
+    error,
+    disabled = false,
+    align = 'left',
+    size = 'md',
+    style,
+    inputStyle,
+    ...inputProps
+  },
   ref,
 ) {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
   const [focused, setFocused] = useState(false);
+  const message = error || helper;
 
   return (
-    <View style={[styles.wrapper, style]}>
+    <View style={[styles.wrapper, disabled && styles.disabled, style]}>
       {label ? (
-        <AppText variant="caption" color="textMuted">
+        <AppText variant="caption" color="textMuted" importantForAccessibility="no">
           {label}
         </AppText>
       ) : null}
@@ -29,7 +42,7 @@ export const TextField = forwardRef(function TextField(
         ]}
       >
         {prefix ? (
-          <AppText variant="caption" color="textMuted">
+          <AppText variant="caption" color="textMuted" importantForAccessibility="no">
             {prefix}
           </AppText>
         ) : null}
@@ -37,7 +50,11 @@ export const TextField = forwardRef(function TextField(
           ref={ref}
           placeholderTextColor={colors.textSubtle}
           selectionColor={colors.primary}
+          cursorColor={colors.primary}
+          editable={!disabled}
           accessibilityLabel={inputProps.accessibilityLabel ?? label}
+          accessibilityHint={inputProps.accessibilityHint ?? message}
+          accessibilityState={{ disabled }}
           {...inputProps}
           onFocus={(e) => {
             setFocused(true);
@@ -54,19 +71,29 @@ export const TextField = forwardRef(function TextField(
             inputStyle,
           ]}
         />
+        {suffix ? (
+          <AppText variant="caption" color="textMuted" importantForAccessibility="no">
+            {suffix}
+          </AppText>
+        ) : null}
       </View>
-      {error ? (
-        <AppText variant="caption" color="danger">
-          {error}
+      {message ? (
+        <AppText
+          variant="caption"
+          color={error ? 'danger' : 'textMuted'}
+          accessibilityLiveRegion={error ? 'polite' : 'none'}
+        >
+          {message}
         </AppText>
       ) : null}
     </View>
   );
 });
 
-const createStyles = ({ colors, spacing, layout, typography, borderWidth }) =>
+const createStyles = ({ colors, spacing, layout, typography, borderWidth, radius, opacity }) =>
   StyleSheet.create({
     wrapper: { gap: spacing.sm },
+    disabled: { opacity: opacity.disabled },
     field: {
       minHeight: layout.inputHeight,
       flexDirection: 'row',
@@ -76,8 +103,9 @@ const createStyles = ({ colors, spacing, layout, typography, borderWidth }) =>
       backgroundColor: colors.surface,
       borderWidth: borderWidth.hairline,
       borderColor: colors.border,
+      borderRadius: radius.control,
     },
-    fieldLg: { minHeight: 52 },
+    fieldLg: { minHeight: layout.inputHeightLg },
     focused: { borderColor: colors.primary },
     error: { borderColor: colors.danger },
     input: {

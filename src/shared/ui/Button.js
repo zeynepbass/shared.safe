@@ -6,7 +6,12 @@ import { AppText } from './AppText';
 import { CornerMarks } from './CornerMarks';
 import { Icon } from './Icon';
 
-const HEIGHTS = { lg: 56, md: 44, sm: 32 };
+const CONTENT_COLOR = {
+  primary: 'textOnPrimary',
+  secondary: 'text',
+  ghost: 'primary',
+  danger: 'danger',
+};
 
 export function Button({
   title,
@@ -18,24 +23,19 @@ export function Button({
   disabled = false,
   loading = false,
   corners,
-  fullWidth = variant !== 'text',
+  fullWidth = variant !== 'ghost',
   style,
   accessibilityLabel,
+  accessibilityHint,
 }) {
   const theme = useTheme();
   const styles = useThemedStyles(createStyles);
   const inactive = disabled || loading;
+  const isGhost = variant === 'ghost';
   const showCorners = corners ?? (variant === 'primary' && size === 'lg');
-
-  const contentColor = {
-    primary: 'textOnPrimary',
-    secondary: 'text',
-    text: 'primary',
-    danger: 'danger',
-  }[variant];
-
+  const contentColor = CONTENT_COLOR[variant];
   const textVariant = size === 'sm' ? 'bodyStrong' : 'button';
-  const iconSize = size === 'sm' ? 14 : 18;
+  const iconSize = size === 'sm' ? theme.iconSize.sm : theme.iconSize.lg;
 
   return (
     <Pressable
@@ -43,14 +43,16 @@ export function Button({
       disabled={inactive}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: inactive, busy: loading }}
-      hitSlop={variant === 'text' ? theme.layout.hitSlop : undefined}
+      hitSlop={isGhost ? theme.layout.hitSlop : undefined}
       style={({ pressed }) => [
         styles.base,
-        variant !== 'text' && { height: HEIGHTS[size] },
+        !isGhost && { height: theme.controlHeight[size] },
         size === 'sm' && styles.small,
         styles[variant],
-        variant === 'primary' && inactive && styles.primaryDisabled,
+        inactive && (variant === 'primary' ? styles.primaryDisabled : styles.disabled),
+        loading && styles.loading,
         fullWidth ? styles.fullWidth : styles.hug,
         pressed && !inactive && styles.pressed,
         style,
@@ -58,33 +60,39 @@ export function Button({
     >
       {showCorners ? <CornerMarks /> : null}
       {loading ? (
-        <ActivityIndicator color={theme.colors[contentColor]} />
-      ) : (
-        <View style={styles.content}>
-          {icon ? <Icon icon={icon} size={iconSize} color={contentColor} /> : null}
-          {title ? (
-            <AppText variant={textVariant} color={contentColor} numberOfLines={1}>
-              {title}
-            </AppText>
-          ) : null}
-          {iconRight ? <Icon icon={iconRight} size={iconSize} color={contentColor} /> : null}
-        </View>
-      )}
+        <ActivityIndicator
+          color={theme.colors[contentColor]}
+          size="small"
+          style={isGhost ? null : StyleSheet.absoluteFill}
+        />
+      ) : null}
+      <View style={[styles.content, loading && !isGhost && styles.hidden]}>
+        {icon ? <Icon icon={icon} size={iconSize} color={contentColor} /> : null}
+        {title ? (
+          <AppText variant={textVariant} color={contentColor} numberOfLines={1}>
+            {title}
+          </AppText>
+        ) : null}
+        {iconRight ? <Icon icon={iconRight} size={iconSize} color={contentColor} /> : null}
+      </View>
     </Pressable>
   );
 }
 
-const createStyles = ({ colors, spacing, borderWidth }) =>
+const createStyles = ({ colors, spacing, borderWidth, radius, opacity }) =>
   StyleSheet.create({
     base: {
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: spacing.lg,
+      borderRadius: radius.control,
     },
     small: { paddingHorizontal: spacing.md },
     fullWidth: { alignSelf: 'stretch' },
     hug: { alignSelf: 'flex-start' },
     content: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    hidden: { opacity: 0 },
     primary: { backgroundColor: colors.primary },
     primaryDisabled: { backgroundColor: colors.primaryDisabled },
     secondary: {
@@ -92,11 +100,13 @@ const createStyles = ({ colors, spacing, borderWidth }) =>
       borderWidth: borderWidth.hairline,
       borderColor: colors.borderStrong,
     },
+    ghost: { paddingHorizontal: spacing.none, gap: spacing.sm },
     danger: {
       backgroundColor: 'transparent',
       borderWidth: borderWidth.hairline,
       borderColor: colors.danger,
     },
-    text: { paddingHorizontal: 0 },
-    pressed: { opacity: 0.75 },
+    disabled: { opacity: opacity.disabled },
+    loading: { opacity: 1 },
+    pressed: { opacity: opacity.pressed },
   });

@@ -36,7 +36,7 @@ export default function WelcomeScreen() {
     <SafeAreaView style={styles.safe}>
       <BrandBar
         trailing={
-          isLast ? null : <Button variant="text" title={t('common.skip')} onPress={goToProfile} />
+          isLast ? null : <Button variant="ghost" title={t('common.skip')} onPress={goToProfile} />
         }
       />
       <ScrollView

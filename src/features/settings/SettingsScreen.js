@@ -14,10 +14,10 @@ import {
   Button,
   Card,
   Icon,
-  ListRow,
+  ListItem,
   OptionSheet,
   Screen,
-  ScreenHeader,
+  Header,
   SectionHeader,
   SegmentedControl,
 } from '@/shared/ui';
@@ -32,7 +32,7 @@ export default function SettingsScreen() {
   const [sheet, setSheet] = useState(null);
 
   return (
-    <Screen padded={false} header={<ScreenHeader title={t('settings.header')} />}>
+    <Screen padded={false} header={<Header title={t('settings.header')} />}>
       <View style={styles.profileWrap}>
         <Card corners style={styles.profile}>
           <Avatar name={settings.profile.name} color={settings.profile.color} size="md" />
@@ -53,7 +53,7 @@ export default function SettingsScreen() {
       </View>
 
       <SectionHeader title={t('settings.appearance')} />
-      <ListRow
+      <ListItem
         leading={<Icon icon={Palette} size={20} color="textMuted" />}
         title={t('settings.theme')}
         trailing={
@@ -70,14 +70,14 @@ export default function SettingsScreen() {
           />
         }
       />
-      <ListRow
+      <ListItem
         onPress={() => setSheet('currency')}
         leading={<Icon icon={Coins} size={20} color="textMuted" />}
         title={t('settings.defaultCurrency')}
         value={CURRENCIES[settings.defaultCurrency]?.label}
         chevron
       />
-      <ListRow
+      <ListItem
         onPress={() => setSheet('language')}
         leading={<Icon icon={Languages} size={20} color="textMuted" />}
         title={t('settings.language')}
@@ -89,6 +89,14 @@ export default function SettingsScreen() {
       <AppText variant="caption" color="textMuted" style={styles.version}>
         {t('settings.version', { version: Constants.expoConfig?.version ?? '1.0.0' })}
       </AppText>
+      {__DEV__ ? (
+        <ListItem
+          onPress={() => router.push('/dev/components')}
+          title="Bileşen kataloğu"
+          subtitle="Yalnızca geliştirme"
+          chevron
+        />
+      ) : null}
 
       <OptionSheet
         visible={sheet === 'currency'}

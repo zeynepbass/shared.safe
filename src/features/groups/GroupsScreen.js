@@ -18,7 +18,7 @@ import {
   EmptyState,
   Fab,
   IconBox,
-  ListRow,
+  ListItem,
   Money,
   SectionHeader,
   Skeleton,
@@ -153,7 +153,7 @@ export default function GroupsScreen() {
 
         <SectionHeader title={t('groups.mine')} />
         {groups.map((g) => (
-          <ListRow
+          <ListItem
             key={g.group.id}
             onPress={() => router.push(`/groups/${g.group.id}`)}
             leading={<IconBox icon={groupTypeIcon(g.group.type)} />}

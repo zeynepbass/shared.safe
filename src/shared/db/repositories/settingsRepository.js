@@ -7,7 +7,6 @@ import { settings } from '../schema';
 export const SETTING_KEYS = {
   theme: 'app.theme',
   language: 'app.language',
-  onboarded: 'app.onboarded',
 };
 
 export function getAllSettings(db) {

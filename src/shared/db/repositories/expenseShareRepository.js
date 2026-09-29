@@ -1,6 +1,6 @@
 import { and, asc, eq, getTableColumns, inArray, isNull } from 'drizzle-orm';
 
-import { computeSplit, SPLIT_TYPES } from '@/domain/split';
+import { computeSplit, SPLIT_TYPES } from '@/shared/lib/split';
 
 import { DbValidationError } from '../errors';
 import { newId } from '../ids';

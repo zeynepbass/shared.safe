@@ -36,7 +36,16 @@ export function useDateFormat() {
       return t('date.dayMonthWeekday', parts(iso));
     };
 
-    return { dayMonth, full, short, sectionHeader };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const time = (ms) => {
+      const date = new Date(ms);
+      const pad = (n) => String(n).padStart(2, '0');
+      return t('date.time', { hours: pad(date.getHours()), minutes: pad(date.getMinutes()) });
+    };
+
+    // 'YYYY-MM' → "Eyl" / "Sep"; three letters is the usual short form in both languages.
+    const monthShort = (yearMonth) =>
+      months[Number(yearMonth.slice(5, 7)) - 1].slice(0, 3).toLocaleUpperCase(i18n.language);
+
+    return { dayMonth, full, short, sectionHeader, time, monthShort };
   }, [t, i18n.language]);
 }

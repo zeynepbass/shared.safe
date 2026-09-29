@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 
 import { readableTextOn } from '@/shared/lib/color';
 import { initialOf } from '@/shared/lib/text';
@@ -7,7 +7,7 @@ import { useTheme, useThemedStyles } from '@/shared/theme';
 
 import { AppText } from './AppText';
 
-export function Avatar({ name, color, size = 'md', accessibilityLabel, style }) {
+export function Avatar({ name, color, image, size = 'md', accessibilityLabel, style }) {
   const { avatarColors, avatarInk, avatarSize, fontFamily } = useTheme();
   const { i18n } = useTranslation();
   const bg = color ?? avatarColors[3];
@@ -22,16 +22,20 @@ export function Avatar({ name, color, size = 'md', accessibilityLabel, style }) 
       importantForAccessibility={labelled ? 'yes' : 'no-hide-descendants'}
       style={[styles.box, { width: box, height: box, backgroundColor: bg }, style]}
     >
-      <AppText
-        style={{
-          fontFamily: fontFamily.display,
-          fontSize,
-          lineHeight,
-          color: readableTextOn(bg, { dark: avatarInk.onLight, light: avatarInk.onDark }),
-        }}
-      >
-        {initialOf(name, i18n.language)}
-      </AppText>
+      {image ? (
+        <Image source={{ uri: image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      ) : (
+        <AppText
+          style={{
+            fontFamily: fontFamily.display,
+            fontSize,
+            lineHeight,
+            color: readableTextOn(bg, { dark: avatarInk.onLight, light: avatarInk.onDark }),
+          }}
+        >
+          {initialOf(name, i18n.language)}
+        </AppText>
+      )}
     </View>
   );
 }
@@ -53,7 +57,13 @@ export function AvatarGroup({ members, size = 'xs', max = 6, style }) {
       accessibilityLabel={t('avatarGroup.label', { count: members.length, names })}
     >
       {visible.map((member) => (
-        <Avatar key={member.id} name={member.name} color={member.avatarColor} size={size} />
+        <Avatar
+          key={member.id}
+          name={member.name}
+          color={member.avatarColor}
+          image={member.avatarPath}
+          size={size}
+        />
       ))}
       {hidden > 0 ? (
         <View style={[themed.overflow, { minWidth: box, height: box }]}>
@@ -67,7 +77,7 @@ export function AvatarGroup({ members, size = 'xs', max = 6, style }) {
 }
 
 const styles = StyleSheet.create({
-  box: { alignItems: 'center', justifyContent: 'center' },
+  box: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
 });
 
 const createStyles = ({ colors, spacing, borderWidth, fontFamily }) =>

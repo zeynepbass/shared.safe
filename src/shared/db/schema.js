@@ -36,6 +36,7 @@ export const users = sqliteTable('users', {
   ...syncColumns(),
   name: text('name').notNull(),
   avatarColor: text('avatar_color').notNull(),
+  avatarPath: text('avatar_path'),
   defaultCurrency: text('default_currency').notNull(),
 });
 
@@ -64,6 +65,7 @@ export const members = sqliteTable(
       .references(() => groups.id),
     name: text('name').notNull(),
     avatarColor: text('avatar_color').notNull(),
+    avatarPath: text('avatar_path'),
     isLocalUser: integer('is_local_user', { mode: 'boolean' }).notNull().default(false),
     position: integer('position').notNull().default(0),
   },

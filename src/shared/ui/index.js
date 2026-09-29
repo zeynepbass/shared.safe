@@ -35,4 +35,5 @@ export { Skeleton, SkeletonListItem } from './Skeleton';
 export { Snackbar, SnackbarProvider, useSnackbar } from './Snackbar';
 export { StatCell, StatGrid } from './StatGrid';
 export { Switch } from './Switch';
+export { SwipeableRow } from './SwipeableRow';
 export { SyncBadge } from './SyncBadge';

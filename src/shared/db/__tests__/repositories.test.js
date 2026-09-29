@@ -1,11 +1,17 @@
 import {
   addMember,
   buildShares,
+  deleteAllData,
+  getGroupActivity,
+  getGroupStats,
+  listExportRows,
   createExpense,
   createGroup,
   getExpense,
   getGroupSnapshot,
   getLocalUser,
+  hasLocalUser,
+  listGroupSummaries,
   listActivity,
   listGroups,
   listMembers,
@@ -33,7 +39,6 @@ function setup() {
     name: 'Ev',
     type: 'home',
     currency: 'TRY',
-    self: { name: 'Zeynep', avatarColor: '#111' },
   });
   const [self] = listMembers(db, groupId);
   const ali = addMember(db, groupId, { name: 'Ali', avatarColor: '#222' });
@@ -93,7 +98,61 @@ describe('users', () => {
   });
 });
 
+describe('local profile', () => {
+  it('is required before a group can be created', () => {
+    const { db } = createTestDb();
+    expect(hasLocalUser(db)).toBe(false);
+    expect(() => createGroup(db, { name: 'Ev', type: 'home', currency: 'TRY' })).toThrow(
+      expect.objectContaining({ code: 'profileMissing' }),
+    );
+    saveProfile(db, { name: 'Zeynep', avatarColor: '#111', avatarPath: 'file:///me.jpg' });
+    expect(hasLocalUser(db)).toBe(true);
+    const groupId = createGroup(db, { name: 'Ev', type: 'home', currency: 'TRY' });
+    const [self] = listMembers(db, groupId);
+    expect(self).toMatchObject({ isLocalUser: true, avatarPath: 'file:///me.jpg' });
+
+    saveProfile(db, { name: 'Zeynep', avatarColor: '#111', avatarPath: null });
+    expect(listMembers(db, groupId)[0].avatarPath).toBeNull();
+  });
+});
+
 describe('groups and members', () => {
+  it('creates a group together with its first members', () => {
+    const { db } = createTestDb();
+    saveProfile(db, { name: 'Zeynep', avatarColor: '#111' });
+    const groupId = createGroup(db, {
+      name: 'Kaş 2026',
+      type: 'trip',
+      currency: 'EUR',
+      members: [
+        { name: ' Ece ', avatarColor: '#222' },
+        { name: 'Mert', avatarColor: '#333' },
+      ],
+    });
+    expect(listMembers(db, groupId).map((m) => [m.name, m.position, m.isLocalUser])).toEqual([
+      ['Zeynep', 0, true],
+      ['Ece', 1, false],
+      ['Mert', 2, false],
+    ]);
+    expect(listActivity(db, groupId).filter((e) => e.type === 'member_added')).toHaveLength(3);
+  });
+
+  it('summarises groups for the list, most recently active first', () => {
+    const ctx = setup();
+    const quiet = createGroup(ctx.db, { name: 'Sessiz', type: 'other', currency: 'TRY' });
+    createExpense(ctx.db, expenseInput(ctx, { amount: 9000 }));
+
+    const summaries = listGroupSummaries(ctx.db);
+    expect(summaries.map((s) => s.group.id)).toEqual([ctx.groupId, quiet]);
+    expect(summaries[0]).toMatchObject({
+      memberCount: 3,
+      selfBalance: 6000,
+      lastExpense: { description: 'Market', spentOn: '2026-09-29' },
+    });
+    expect(summaries[0].lastExpense.payer.id).toBe(ctx.self);
+    expect(summaries[1]).toMatchObject({ selfBalance: 0, lastExpense: null, memberCount: 1 });
+  });
+
   it('stores uuids, timestamps and the icon', () => {
     const ctx = setup();
     const { group, members } = getGroupSnapshot(ctx.db, ctx.groupId);
@@ -225,7 +284,6 @@ describe('expenses', () => {
       name: 'Tatil',
       type: 'trip',
       currency: 'EUR',
-      self: { name: 'Zeynep', avatarColor: '#111' },
     });
     const stranger = addMember(ctx.db, otherGroup, { name: 'Deniz', avatarColor: '#555' });
     expect(() =>
@@ -317,5 +375,91 @@ describe('settlements and activity', () => {
         paidOn: '2026-09-29',
       }),
     ).toThrow(expect.objectContaining({ code: 'sameMember' }));
+  });
+});
+
+describe('activity feed', () => {
+  it('keeps removed members so older entries can still name them', () => {
+    const ctx = setup();
+    const can = addMember(ctx.db, ctx.groupId, { name: 'Can', avatarColor: '#444' });
+    removeMember(ctx.db, can);
+    const { members, entries } = getGroupActivity(ctx.db, ctx.groupId);
+    expect(members.map((m) => m.name)).toContain('Can');
+    expect(entries).toContainEqual(
+      expect.objectContaining({ type: 'member_removed', entityId: can }),
+    );
+  });
+
+  it('logs every expense change', () => {
+    const ctx = setup();
+    const id = createExpense(ctx.db, expenseInput(ctx));
+    updateExpense(ctx.db, id, expenseInput(ctx, { description: 'Pazar' }));
+    softDeleteExpense(ctx.db, id);
+    restoreExpense(ctx.db, id);
+    const types = getGroupActivity(ctx.db, ctx.groupId)
+      .entries.filter((entry) => entry.entityId === id)
+      .map((entry) => entry.type)
+      .sort();
+    expect(types).toEqual(
+      ['expense_created', 'expense_deleted', 'expense_restored', 'expense_updated'].sort(),
+    );
+  });
+});
+
+describe('stats', () => {
+  it('summarises active spending by category and month', () => {
+    const ctx = setup();
+    createExpense(ctx.db, expenseInput(ctx, { amount: 3000, category: 'food' }));
+    createExpense(ctx.db, expenseInput(ctx, { amount: 1000, spentOn: '2026-08-10' }));
+    const gone = createExpense(ctx.db, expenseInput(ctx, { amount: 5000, category: 'fun' }));
+    softDeleteExpense(ctx.db, gone);
+
+    const stats = getGroupStats(ctx.db, ctx.groupId, { months: 3, today: '2026-09-29' });
+    expect(stats.totals).toEqual({ total: 4000, count: 2 });
+    expect(stats.byCategory.map((c) => [c.category, c.amount])).toEqual([
+      ['food', 3000],
+      ['market', 1000],
+    ]);
+    expect(stats.byMonth).toEqual([
+      { month: '2026-07', amount: 0 },
+      { month: '2026-08', amount: 1000 },
+      { month: '2026-09', amount: 3000 },
+    ]);
+    expect(getGroupStats(ctx.db, 'missing', { today: '2026-09-29' })).toBeNull();
+  });
+});
+
+describe('export and reset', () => {
+  it('lists expenses and settlements with names', () => {
+    const ctx = setup();
+    createExpense(ctx.db, expenseInput(ctx));
+    recordSettlement(ctx.db, {
+      groupId: ctx.groupId,
+      fromMemberId: ctx.ali,
+      toMemberId: ctx.self,
+      amount: 3333,
+      paidOn: '2026-09-30',
+    });
+    const rows = listExportRows(ctx.db);
+    expect(rows.map((r) => [r.type, r.paidBy, r.paidTo, r.amount])).toEqual([
+      ['expense', 'Zeynep', '', 10000],
+      ['settlement', 'Ali', 'Zeynep', 3333],
+    ]);
+    expect(rows[0].shares.map((s) => s.name)).toEqual(['Zeynep', 'Ali', 'Ayşe']);
+  });
+
+  it('removes everything, including the profile', () => {
+    const ctx = setup();
+    createExpense(ctx.db, expenseInput(ctx));
+    deleteAllData(ctx.db);
+    const counts = ctx.sqlite
+      .prepare(
+        `SELECT (SELECT COUNT(*) FROM users) + (SELECT COUNT(*) FROM groups) +
+                (SELECT COUNT(*) FROM members) + (SELECT COUNT(*) FROM expenses) +
+                (SELECT COUNT(*) FROM expense_shares) + (SELECT COUNT(*) FROM activity_log) AS n`,
+      )
+      .get();
+    expect(counts.n).toBe(0);
+    expect(hasLocalUser(ctx.db)).toBe(false);
   });
 });

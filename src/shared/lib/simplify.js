@@ -1,25 +1,36 @@
 export const EXACT_LIMIT = 16;
 
+function pickLargest(entries) {
+  let best = null;
+  for (const entry of entries) {
+    if (entry.amount === 0) continue;
+    if (
+      !best ||
+      entry.amount > best.amount ||
+      (entry.amount === best.amount && entry.order < best.order)
+    ) {
+      best = entry;
+    }
+  }
+  return best;
+}
+
+// Greedy: the largest creditor is always paid by the largest debtor, re-picked after every
+// transfer. Ties fall back to the member order so the result is stable. Each transfer zeroes at
+// least one side, so there are at most n - 1 transfers.
 function settleGreedy(entries) {
-  const creditors = entries
-    .filter((e) => e.amount > 0)
-    .map((e) => ({ ...e }))
-    .sort((a, b) => b.amount - a.amount || a.order - b.order);
-  const debtors = entries
-    .filter((e) => e.amount < 0)
-    .map((e) => ({ ...e, amount: -e.amount }))
-    .sort((a, b) => b.amount - a.amount || a.order - b.order);
+  const creditors = entries.filter((e) => e.amount > 0).map((e) => ({ ...e }));
+  const debtors = entries.filter((e) => e.amount < 0).map((e) => ({ ...e, amount: -e.amount }));
 
   const transfers = [];
-  let c = 0;
-  let d = 0;
-  while (c < creditors.length && d < debtors.length) {
-    const amount = Math.min(creditors[c].amount, debtors[d].amount);
-    transfers.push({ from: debtors[d].id, to: creditors[c].id, amount });
-    creditors[c].amount -= amount;
-    debtors[d].amount -= amount;
-    if (creditors[c].amount === 0) c += 1;
-    if (debtors[d].amount === 0) d += 1;
+  for (;;) {
+    const creditor = pickLargest(creditors);
+    const debtor = pickLargest(debtors);
+    if (!creditor || !debtor) break;
+    const amount = Math.min(creditor.amount, debtor.amount);
+    transfers.push({ from: debtor.id, to: creditor.id, amount });
+    creditor.amount -= amount;
+    debtor.amount -= amount;
   }
   return transfers;
 }
@@ -76,12 +87,18 @@ function partitionIntoZeroSumGroups(entries) {
   return groups;
 }
 
+// Before the greedy pass, small groups (up to EXACT_LIMIT non-zero balances) are split into the
+// largest number of independent zero-sum subsets; settling each subset separately is what makes
+// the transfer count minimal (n - subsets). Larger groups use the greedy pass directly.
 export function simplifyDebts(balances, { order } = {}) {
-  const ids = order ?? [...balances.keys()];
+  const ids = order ? [...new Set([...order, ...balances.keys()])] : [...balances.keys()];
   const entries = ids
     .map((id, index) => ({ id, amount: balances.get(id) ?? 0, order: index }))
     .filter((e) => e.amount !== 0);
 
+  for (const e of entries) {
+    if (!Number.isSafeInteger(e.amount)) throw new Error(`Balance of ${e.id} is not in kuruş`);
+  }
   const total = entries.reduce((sum, e) => sum + e.amount, 0);
   if (total !== 0) {
     throw new Error(`Balances must sum to zero, got ${total}`);

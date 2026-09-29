@@ -30,10 +30,11 @@ export function SettingsProvider({ children }) {
     const user = data?.user;
     return {
       loaded: !loading,
-      onboarded: values[SETTING_KEYS.onboarded] === '1',
+      hasProfile: Boolean(user),
       profile: {
         name: user?.name ?? '',
         avatarColor: user?.avatarColor ?? avatarColors[3],
+        avatarPath: user?.avatarPath ?? null,
       },
       defaultCurrency: user?.defaultCurrency ?? 'TRY',
       theme: values[SETTING_KEYS.theme] ?? 'system',

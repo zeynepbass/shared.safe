@@ -47,7 +47,8 @@
           "cameraPermission": "Fişin fotoğrafını çekmek için kamera erişimi gerekiyor.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "scheme": "ortakkasa"
   }

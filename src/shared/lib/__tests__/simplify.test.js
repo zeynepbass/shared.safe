@@ -112,3 +112,43 @@ describe('simplifyDebts', () => {
     expect(() => simplifyDebts(toMap({ a: 100, b: -50 }))).toThrow();
   });
 });
+
+describe('greedy matching', () => {
+  it('always pairs the largest debtor with the largest creditor, re-picking each step', () => {
+    const balances = toMap({ a: 10000, b: 8000, c: -15000, d: -3000 });
+    expect(simplifyDebts(balances)).toEqual([
+      { from: 'c', to: 'a', amount: 10000 },
+      { from: 'c', to: 'b', amount: 5000 },
+      { from: 'd', to: 'b', amount: 3000 },
+    ]);
+  });
+
+  it('breaks ties by member order', () => {
+    const balances = toMap({ a: 500, b: 500, c: -500, d: -500 });
+    expect(simplifyDebts(balances, { order: ['b', 'a', 'd', 'c'] })).toEqual([
+      { from: 'd', to: 'b', amount: 500 },
+      { from: 'c', to: 'a', amount: 500 },
+    ]);
+  });
+
+  it('keeps members missing from the order option', () => {
+    const balances = toMap({ a: 300, b: -100, c: -200 });
+    const transfers = simplifyDebts(balances, { order: ['a'] });
+    expectSettled(balances, transfers);
+  });
+
+  it('never needs more than n - 1 transfers above the exact limit', () => {
+    const rng = seeded(11);
+    for (let run = 0; run < 20; run += 1) {
+      const values = randomBalances(rng, EXACT_LIMIT + 1 + run);
+      const balances = new Map(values.map((v, i) => [`m${i}`, v]));
+      const transfers = simplifyDebts(balances);
+      expectSettled(balances, transfers);
+      expect(transfers.length).toBeLessThanOrEqual(values.filter((v) => v !== 0).length - 1);
+    }
+  });
+
+  it('rejects fractional kuruş', () => {
+    expect(() => simplifyDebts(toMap({ a: 0.5, b: -0.5 }))).toThrow();
+  });
+});

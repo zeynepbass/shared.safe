@@ -5,7 +5,7 @@ import { DbValidationError } from '../errors';
 import { newId, now } from '../ids';
 import { expenses, expenseShares, members, settlements } from '../schema';
 import { logActivity } from './activityRepository';
-import { touchGroup } from './groupRepository';
+import { touchGroup } from './groupAccess';
 
 export function listMembers(db, groupId) {
   return db
@@ -36,7 +36,12 @@ export function assertActiveMembers(executor, groupId, memberIds) {
   }
 }
 
-export function insertMember(tx, groupId, { name, avatarColor, isLocalUser = false }, at) {
+export function insertMember(
+  tx,
+  groupId,
+  { name, avatarColor, avatarPath = null, isLocalUser = false },
+  at,
+) {
   const id = newId();
   const { next } = tx
     .select({ next: sql`COALESCE(MAX(${members.position}), -1) + 1` })
@@ -49,6 +54,7 @@ export function insertMember(tx, groupId, { name, avatarColor, isLocalUser = fal
       groupId,
       name: name.trim(),
       avatarColor,
+      avatarPath,
       isLocalUser,
       position: Number(next),
       createdAt: at,

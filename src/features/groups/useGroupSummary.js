@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { computeBalances } from '@/domain/balances';
+import { computeBalances } from '@/shared/lib/balances';
 
 export function selfMember(members) {
   return members.find((m) => m.isLocalUser) ?? null;

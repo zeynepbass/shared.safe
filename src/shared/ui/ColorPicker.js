@@ -1,13 +1,26 @@
+import { Camera } from 'lucide-react-native';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useThemedStyles } from '@/shared/theme';
 
-export function ColorPicker({ colors, value, onChange, accessibilityLabel }) {
+import { Icon } from './Icon';
+
+// `onPhotoPress` adds the dashed camera tile after the swatches; while a photo is in use
+// (`photoSelected`) that tile carries the selection ring instead of a colour.
+export function ColorPicker({
+  colors,
+  value,
+  onChange,
+  accessibilityLabel,
+  onPhotoPress,
+  photoSelected = false,
+  photoLabel,
+}) {
   const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.row} accessibilityRole="radiogroup" accessibilityLabel={accessibilityLabel}>
       {colors.map((color, index) => {
-        const selected = color === value;
+        const selected = !photoSelected && color === value;
         return (
           <Pressable
             key={color}
@@ -21,6 +34,19 @@ export function ColorPicker({ colors, value, onChange, accessibilityLabel }) {
           </Pressable>
         );
       })}
+      {onPhotoPress ? (
+        <Pressable
+          onPress={onPhotoPress}
+          accessibilityRole="button"
+          accessibilityState={{ selected: photoSelected }}
+          accessibilityLabel={photoLabel}
+          style={[styles.ring, photoSelected && styles.ringSelected]}
+        >
+          <View style={styles.photo}>
+            <Icon icon={Camera} size={16} color={photoSelected ? 'primary' : 'textMuted'} />
+          </View>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -37,4 +63,12 @@ const createStyles = ({ colors, spacing, borderWidth }) =>
     },
     ringSelected: { borderColor: colors.text },
     swatch: { flex: 1 },
+    photo: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: borderWidth.hairline,
+      borderStyle: 'dashed',
+      borderColor: colors.borderStrong,
+    },
   });

@@ -5,7 +5,7 @@ import { DbValidationError } from '../errors';
 import { newId, now } from '../ids';
 import { settlements } from '../schema';
 import { logActivity } from './activityRepository';
-import { getGroup, touchGroup } from './groupRepository';
+import { getGroup, touchGroup } from './groupAccess';
 import { assertActiveMembers } from './memberRepository';
 
 const TABLES = ['settlements', 'groups', 'activity_log'];

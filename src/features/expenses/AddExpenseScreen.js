@@ -259,7 +259,12 @@ export default function AddExpenseScreen() {
               accessibilityLabel={`${t('expenseForm.payer')}: ${memberLabel(payer, t)}`}
             >
               <View style={styles.cellValue}>
-                <Avatar name={payer?.name} color={payer?.avatarColor} size="xs" />
+                <Avatar
+                  name={payer?.name}
+                  color={payer?.avatarColor}
+                  image={payer?.avatarPath}
+                  size="xs"
+                />
                 <AppText variant="bodyStrong">{memberLabel(payer, t)}</AppText>
                 <Icon icon={ChevronDown} size={14} color="textMuted" />
               </View>
@@ -313,7 +318,7 @@ export default function AddExpenseScreen() {
         options={members.map((m) => ({
           value: m.id,
           label: memberLabel(m, t),
-          leading: <Avatar name={m.name} color={m.avatarColor} size="sm" />,
+          leading: <Avatar name={m.name} color={m.avatarColor} image={m.avatarPath} size="sm" />,
         }))}
       />
       <OptionSheet

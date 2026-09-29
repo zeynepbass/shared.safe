@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { listGroupSnapshots, useDbQuery } from '@/shared/db';
+import { listGroupSummaries, useDbQuery } from '@/shared/db';
 import { useSettings } from '@/features/settings/SettingsProvider';
 import { currencySymbol } from '@/shared/lib/money';
 import { useDateFormat } from '@/shared/lib/useDateFormat';
@@ -26,9 +26,9 @@ import {
 } from '@/shared/ui';
 
 import { groupTypeIcon } from './groupTypes';
-import { memberLabel, summarizeGroup } from './useGroupSummary';
+import { memberLabel } from './useGroupSummary';
 
-const TABLES = ['groups', 'members', 'expenses', 'settlements', 'settings'];
+const TABLES = ['groups', 'members', 'expenses', 'expense_shares', 'settlements'];
 
 function statusKey(balance) {
   if (balance > 0) return 'groups.statusCreditor';
@@ -41,9 +41,8 @@ export default function GroupsScreen() {
   const styles = useThemedStyles(createStyles);
   const { defaultCurrency } = useSettings();
   const dates = useDateFormat();
-  const { data, loading } = useDbQuery(listGroupSnapshots, [], TABLES);
-
-  const groups = useMemo(() => (data ?? []).map(summarizeGroup), [data]);
+  const { data, loading } = useDbQuery(listGroupSummaries, [], TABLES);
+  const groups = useMemo(() => data ?? [], [data]);
 
   const totals = useMemo(() => {
     const inCurrency = groups.filter((g) => g.group.currency === defaultCurrency);
@@ -83,12 +82,11 @@ export default function GroupsScreen() {
     );
   }
 
-  const lastExpenseLine = (group) => {
-    const last = group.expenses[0];
+  const lastExpenseLine = (summary) => {
+    const last = summary.lastExpense;
     if (!last) return t('groups.noExpenses');
-    const payer = group.members.find((m) => m.id === last.payerId);
     return t('groups.lastExpense', {
-      payer: memberLabel(payer, t),
+      payer: memberLabel(last.payer, t),
       title: last.description,
       date: dates.short(last.spentOn),
     });

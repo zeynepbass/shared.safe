@@ -21,6 +21,8 @@ export function ListItem({
   divider = true,
   accessibilityLabel,
   accessibilityHint,
+  accessibilityActions,
+  onAccessibilityAction,
   style,
 }) {
   const { iconSize } = useTheme();
@@ -38,6 +40,8 @@ export function ListItem({
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
       accessibilityState={interactive ? { disabled } : undefined}
+      accessibilityActions={accessibilityActions}
+      onAccessibilityAction={onAccessibilityAction}
       style={
         interactive
           ? ({ pressed }) => [...baseStyle, pressed && styles.pressed, style]

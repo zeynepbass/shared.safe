@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
-import { computeSplit } from '@/domain/split';
+import { computeSplit } from '@/shared/lib/split';
 import { parseAmountInput } from '@/shared/lib/money';
 
 let draft = null;

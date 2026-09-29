@@ -15,13 +15,13 @@ import {
   BlueprintGrid,
   EmptyState,
   IconBox,
-  ListRow,
+  ListItem,
   Money,
   Screen,
-  ScreenHeader,
+  Header,
   SectionHeader,
   StatGrid,
-  useToast,
+  useSnackbar,
 } from '@/shared/ui';
 
 import { categoryIcon } from './categories';
@@ -38,7 +38,7 @@ export default function ExpenseDetailScreen() {
   const { groupId, expenseId } = useLocalSearchParams();
   const { t, i18n } = useTranslation();
   const db = useSQLiteContext();
-  const toast = useToast();
+  const snackbar = useSnackbar();
   const dates = useDateFormat();
   const styles = useThemedStyles(createStyles);
   const { data, loading } = useDbQuery(
@@ -47,14 +47,14 @@ export default function ExpenseDetailScreen() {
     ['expenses', 'members', 'groups'],
   );
 
-  if (loading) return <Screen header={<ScreenHeader title={t('expenseDetail.header')} />} />;
+  if (loading) return <Screen header={<Header title={t('expenseDetail.header')} />} />;
 
   const expense = data?.expense;
   const snapshot = data?.snapshot;
 
   if (!expense || expense.deletedAt || !snapshot) {
     return (
-      <Screen header={<ScreenHeader title={t('expenseDetail.header')} />}>
+      <Screen header={<Header title={t('expenseDetail.header')} />}>
         <EmptyState icon={Trash2} title={t('expenseDetail.notFound')} />
       </Screen>
     );
@@ -68,10 +68,9 @@ export default function ExpenseDetailScreen() {
   const remove = async () => {
     await softDeleteExpense(db, expense.id);
     router.back();
-    toast.show({
+    snackbar.show({
       message: t('expenseDetail.deleted'),
-      actionLabel: t('common.undo'),
-      onAction: () => restoreExpense(db, expense.id),
+      onUndo: () => restoreExpense(db, expense.id),
     });
   };
 
@@ -89,7 +88,7 @@ export default function ExpenseDetailScreen() {
     <Screen
       padded={false}
       header={
-        <ScreenHeader
+        <Header
           title={t('expenseDetail.header')}
           actions={[
             {
@@ -167,7 +166,7 @@ export default function ExpenseDetailScreen() {
       {expense.shares.map((share) => {
         const member = memberById.get(share.memberId);
         return (
-          <ListRow
+          <ListItem
             key={share.memberId}
             leading={<Avatar name={member?.name} color={member?.color} size="md" />}
             title={memberLabel(member, t)}

@@ -8,28 +8,24 @@ import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { createExpense, getExpense, getGroupSnapshot, updateExpense, useDbQuery } from '@/db';
 import { memberLabel, selfMember } from '@/features/groups/useGroupSummary';
 import { todayISO } from '@/shared/lib/dates';
-import {
-  applyKeypadInput,
-  currencySymbol,
-  formatAmountInput,
-  formatKeypadDisplay,
-} from '@/shared/lib/money';
+import { applyKeypadInput, formatAmountInput } from '@/shared/lib/money';
 import { useDateFormat } from '@/shared/lib/useDateFormat';
-import { useThemedStyles } from '@/shared/theme';
+import { useTheme, useThemedStyles } from '@/shared/theme';
 import {
+  AmountInput,
   AppText,
   Avatar,
   BottomBar,
   Button,
   Chip,
   Icon,
-  Keypad,
+  Numpad,
   OptionSheet,
   Screen,
-  ScreenHeader,
+  Header,
   StatCell,
-  TextField,
-  useToast,
+  Input,
+  useSnackbar,
 } from '@/shared/ui';
 
 import { CATEGORIES } from './categories';
@@ -59,9 +55,10 @@ export default function AddExpenseScreen() {
   const { groupId, expenseId } = useLocalSearchParams();
   const { t, i18n } = useTranslation();
   const db = useSQLiteContext();
-  const toast = useToast();
+  const snackbar = useSnackbar();
   const dates = useDateFormat();
   const styles = useThemedStyles(createStyles);
+  const { iconSize } = useTheme();
   const draft = useDraft();
   const [sheet, setSheet] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -98,7 +95,7 @@ export default function AddExpenseScreen() {
   useEffect(() => () => clearDraft(), []);
 
   if (!draft || draft.key !== draftKey || !group) {
-    return <Screen header={<ScreenHeader leading="close" />} />;
+    return <Screen header={<Header leading="close" />} />;
   }
 
   const currency = group.currency;
@@ -156,7 +153,7 @@ export default function AddExpenseScreen() {
       } else {
         await createExpense(db, input);
       }
-      toast.show({ message: t(draft.expenseId ? 'expenseForm.updated' : 'expenseForm.saved') });
+      snackbar.show({ message: t(draft.expenseId ? 'expenseForm.updated' : 'expenseForm.saved') });
       router.back();
     } catch (error) {
       console.error(error);
@@ -184,7 +181,7 @@ export default function AddExpenseScreen() {
       scroll={false}
       padded={false}
       header={
-        <ScreenHeader
+        <Header
           title={draft.expenseId ? t('expenseForm.editHeader') : t('expenseForm.header')}
           subtitle={group.name}
           leading="close"
@@ -198,36 +195,30 @@ export default function AddExpenseScreen() {
       }
     >
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scroll}>
-        <View style={styles.amountRow}>
-          <View
-            style={styles.amount}
-            accessible
-            accessibilityLabel={`${t('expenseForm.amountLabel')}: ${formatKeypadDisplay(draft.amountInput, { locale })} ${currencySymbol(currency)}`}
-          >
-            <AppText variant="heading" color="primary" style={styles.currency}>
-              {currencySymbol(currency)}
-            </AppText>
-            <AppText variant="amountXl" tabular numberOfLines={1} adjustsFontSizeToFit>
-              {formatKeypadDisplay(draft.amountInput, { locale })}
-            </AppText>
-          </View>
-          <Pressable
-            onPress={() => setSheet('receipt')}
-            accessibilityRole="button"
-            accessibilityLabel={
-              draft.receiptUri ? t('expenseForm.receiptAttached') : t('expenseForm.receipt')
-            }
-            style={styles.receiptButton}
-          >
-            <Icon icon={draft.receiptUri ? Check : Receipt} size={14} color="primary" />
-            <AppText variant="caption" color="primary">
-              {t('expenseForm.receipt')}
-            </AppText>
-          </Pressable>
-        </View>
+        <AmountInput
+          value={draft.amountInput}
+          currency={currency}
+          label={t('expenseForm.amountLabel')}
+          style={styles.padded}
+          accessory={
+            <Pressable
+              onPress={() => setSheet('receipt')}
+              accessibilityRole="button"
+              accessibilityLabel={
+                draft.receiptUri ? t('expenseForm.receiptAttached') : t('expenseForm.receipt')
+              }
+              style={styles.receiptButton}
+            >
+              <Icon icon={draft.receiptUri ? Check : Receipt} size={iconSize.sm} color="primary" />
+              <AppText variant="caption" color="primary">
+                {t('expenseForm.receipt')}
+              </AppText>
+            </Pressable>
+          }
+        />
 
         <View style={styles.padded}>
-          <TextField
+          <Input
             placeholder={t('expenseForm.titlePlaceholder')}
             accessibilityLabel={t('expenseForm.titlePlaceholder')}
             value={draft.title}
@@ -300,7 +291,7 @@ export default function AddExpenseScreen() {
         </View>
 
         <View style={styles.keypad}>
-          <Keypad onKey={onKey} decimalSeparator={locale === 'tr' ? ',' : '.'} />
+          <Numpad onKey={onKey} onClear={() => updateDraft({ amountInput: '' })} />
         </View>
       </ScrollView>
 
@@ -345,18 +336,6 @@ const createStyles = ({ colors, spacing, layout, borderWidth }) =>
     flex: { flex: 1 },
     scroll: { gap: spacing.md, paddingBottom: spacing.md },
     padded: { paddingHorizontal: layout.gutter },
-    amountRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing.md,
-      marginHorizontal: layout.gutter,
-      paddingVertical: spacing.sm,
-      borderBottomWidth: borderWidth.hairline,
-      borderBottomColor: colors.border,
-    },
-    amount: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', gap: spacing.xs },
-    currency: { marginBottom: spacing.xs },
     receiptButton: {
       flexDirection: 'row',
       alignItems: 'center',

@@ -15,9 +15,9 @@ import {
   Button,
   ColorPicker,
   Screen,
-  ScreenHeader,
+  Header,
   SegmentedControl,
-  TextField,
+  Input,
 } from '@/shared/ui';
 
 const CURRENCY_OPTIONS = CURRENCY_CODES.map((code) => ({
@@ -59,7 +59,7 @@ export default function ProfileScreen({ mode = 'create' }) {
     <Screen
       keyboard
       header={
-        <ScreenHeader
+        <Header
           title={isEdit ? t('profile.editHeader') : t('profile.header')}
           leading={isEdit ? 'close' : 'back'}
         />
@@ -93,7 +93,7 @@ export default function ProfileScreen({ mode = 'create' }) {
       </View>
 
       <View style={styles.fields}>
-        <TextField
+        <Input
           label={t('profile.nameLabel')}
           placeholder={t('profile.namePlaceholder')}
           value={name}

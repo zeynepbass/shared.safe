@@ -14,10 +14,10 @@ import {
   Button,
   InfoBox,
   Screen,
-  ScreenHeader,
+  Header,
   SegmentedControl,
   SelectCard,
-  TextField,
+  Input,
 } from '@/shared/ui';
 
 import { GROUP_TYPES } from './groupTypes';
@@ -60,7 +60,7 @@ export default function CreateGroupScreen() {
   return (
     <Screen
       keyboard
-      header={<ScreenHeader title={t('groupForm.header')} leading="close" />}
+      header={<Header title={t('groupForm.header')} leading="close" />}
       footer={
         <BottomBar>
           <Button
@@ -73,7 +73,7 @@ export default function CreateGroupScreen() {
       }
     >
       <View style={styles.form}>
-        <TextField
+        <Input
           label={t('groupForm.nameLabel')}
           placeholder={t('groupForm.namePlaceholder')}
           value={name}

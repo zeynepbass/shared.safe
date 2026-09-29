@@ -12,16 +12,16 @@ import {
   Button,
   ColorPicker,
   Screen,
-  ScreenHeader,
-  TextField,
-  useToast,
+  Header,
+  Input,
+  useSnackbar,
 } from '@/shared/ui';
 
 export default function AddMemberScreen() {
   const { groupId } = useLocalSearchParams();
   const { t } = useTranslation();
   const db = useSQLiteContext();
-  const toast = useToast();
+  const snackbar = useSnackbar();
   const { avatarColors } = useTheme();
   const styles = useThemedStyles(createStyles);
   const { data: group } = useDbQuery((d) => getGroup(d, groupId), [groupId], ['groups']);
@@ -40,7 +40,7 @@ export default function AddMemberScreen() {
     setSaving(true);
     try {
       await addMember(db, groupId, { name: trimmed, color });
-      toast.show({ message: t('member.added', { name: trimmed }) });
+      snackbar.show({ message: t('member.added', { name: trimmed }) });
       router.back();
     } finally {
       setSaving(false);
@@ -50,7 +50,7 @@ export default function AddMemberScreen() {
   return (
     <Screen
       keyboard
-      header={<ScreenHeader title={t('member.header')} subtitle={group?.name} leading="close" />}
+      header={<Header title={t('member.header')} subtitle={group?.name} leading="close" />}
       footer={
         <BottomBar>
           <Button
@@ -71,7 +71,7 @@ export default function AddMemberScreen() {
           accessibilityLabel={t('member.colorLabel')}
         />
       </View>
-      <TextField
+      <Input
         label={t('member.nameLabel')}
         placeholder={t('member.namePlaceholder')}
         value={name}

@@ -21,7 +21,8 @@
   },
   "keypad": {
     "backspace": "Delete",
-    "decimal": "Decimal separator"
+    "decimal": "Decimal separator",
+    "clearHint": "Long press to clear the amount"
   },
   "theme": {
     "title": "Theme",
@@ -233,5 +234,22 @@
     "language": "Language",
     "about": "About",
     "version": "Version {{version}}"
+  },
+  "amountInput": { "label": "Amount" },
+  "avatarGroup": {
+    "label_one": "{{count}} person: {{names}}",
+    "label_other": "{{count}} people: {{names}}"
+  },
+  "snackbar": { "actionAvailable": "{{action}} available" },
+  "offlineBanner": {
+    "message": "Offline · changes are saved on this device",
+    "pending_one": "Offline · {{count}} change pending",
+    "pending_other": "Offline · {{count}} changes pending"
+  },
+  "sync": {
+    "synced": "Synced",
+    "pending": "Pending",
+    "offline": "Offline",
+    "error": "Sync failed"
   }
 }

@@ -1,12 +1,12 @@
 import { ChevronRight } from 'lucide-react-native';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { useThemedStyles } from '@/shared/theme';
+import { useTheme, useThemedStyles } from '@/shared/theme';
 
 import { AppText } from './AppText';
 import { Icon } from './Icon';
 
-export function ListRow({
+export function ListItem({
   leading,
   title,
   titleAccessory,
@@ -17,21 +17,27 @@ export function ListRow({
   chevron = false,
   onPress,
   onLongPress,
+  disabled = false,
   divider = true,
   accessibilityLabel,
+  accessibilityHint,
   style,
 }) {
+  const { iconSize } = useTheme();
   const styles = useThemedStyles(createStyles);
   const interactive = Boolean(onPress || onLongPress);
   const Wrapper = interactive ? Pressable : View;
-  const baseStyle = [styles.row, divider && styles.divider];
+  const baseStyle = [styles.row, divider && styles.divider, disabled && styles.disabled];
 
   return (
     <Wrapper
       onPress={onPress}
       onLongPress={onLongPress}
+      disabled={interactive ? disabled : undefined}
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={interactive ? { disabled } : undefined}
       style={
         interactive
           ? ({ pressed }) => [...baseStyle, pressed && styles.pressed, style]
@@ -71,12 +77,12 @@ export function ListRow({
           {value}
         </AppText>
       ) : null}
-      {chevron ? <Icon icon={ChevronRight} size={16} color="textSubtle" /> : null}
+      {chevron ? <Icon icon={ChevronRight} size={iconSize.md} color="textSubtle" /> : null}
     </Wrapper>
   );
 }
 
-const createStyles = ({ colors, spacing, layout, borderWidth }) =>
+const createStyles = ({ colors, spacing, layout, borderWidth, opacity }) =>
   StyleSheet.create({
     row: {
       minHeight: layout.rowHeight,
@@ -88,6 +94,7 @@ const createStyles = ({ colors, spacing, layout, borderWidth }) =>
     },
     divider: { borderBottomWidth: borderWidth.hairline, borderBottomColor: colors.divider },
     pressed: { backgroundColor: colors.surfaceMuted },
+    disabled: { opacity: opacity.disabled },
     leading: { alignItems: 'center', justifyContent: 'center' },
     body: { flex: 1, gap: spacing.xxs },
     titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },

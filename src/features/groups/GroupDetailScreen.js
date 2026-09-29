@@ -13,16 +13,16 @@ import { useDateFormat } from '@/shared/lib/useDateFormat';
 import { useThemedStyles } from '@/shared/theme';
 import {
   AppText,
-  AvatarStack,
+  AvatarGroup,
   Button,
   Card,
   EmptyState,
   Fab,
   Icon,
   IconBox,
-  ListRow,
+  ListItem,
   Money,
-  ScreenHeader,
+  Header,
   SectionHeader,
   useFormatMoney,
 } from '@/shared/ui';
@@ -73,7 +73,7 @@ export default function GroupDetailScreen() {
   if (loading || !summary) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ScreenHeader />
+        <Header />
       </SafeAreaView>
     );
   }
@@ -95,7 +95,7 @@ export default function GroupDetailScreen() {
   const header = (
     <View>
       <View style={styles.membersRow}>
-        <AvatarStack members={members} />
+        <AvatarGroup members={members} />
         <AppText variant="caption" color="textMuted">
           {t('groupDetail.currency', { symbol: currencySymbol(currency) })}
         </AppText>
@@ -145,7 +145,7 @@ export default function GroupDetailScreen() {
           });
 
     return (
-      <ListRow
+      <ListItem
         onPress={() => router.push(`/groups/${group.id}/expense/${expense.id}`)}
         leading={<IconBox icon={categoryIcon(expense.category)} />}
         title={expense.title}
@@ -179,7 +179,7 @@ export default function GroupDetailScreen() {
           ? -settlement.amount
           : 0;
     return (
-      <ListRow
+      <ListItem
         leading={<IconBox icon={ArrowLeftRight} color="textMuted" />}
         title={t('groupDetail.settlementTitle', {
           from: nameOf(settlement.fromMemberId),
@@ -200,7 +200,7 @@ export default function GroupDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <ScreenHeader
+      <Header
         title={group.name}
         subtitle={t('groupDetail.subtitle', {
           type: t(`groupTypes.${group.type}.title`),

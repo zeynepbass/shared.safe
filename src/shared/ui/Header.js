@@ -8,13 +8,21 @@ import { useThemedStyles } from '@/shared/theme';
 import { AppText } from './AppText';
 import { IconButton } from './IconButton';
 
-export function ScreenHeader({ title, subtitle, leading = 'back', onLeadingPress, actions = [] }) {
+export function Header({
+  title,
+  subtitle,
+  leading = 'back',
+  onLeadingPress,
+  actions = [],
+  trailing,
+  style,
+}) {
   const { t } = useTranslation();
   const styles = useThemedStyles(createStyles);
   const leadingIcon = leading === 'close' ? X : leading === 'back' ? ChevronLeft : null;
 
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, style]}>
       <View style={styles.side}>
         {leadingIcon ? (
           <IconButton
@@ -24,9 +32,14 @@ export function ScreenHeader({ title, subtitle, leading = 'back', onLeadingPress
           />
         ) : null}
       </View>
-      <View style={styles.center}>
+      <View
+        style={styles.center}
+        accessible={Boolean(title)}
+        accessibilityRole="header"
+        accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
+      >
         {title ? (
-          <AppText variant="headerTitle" numberOfLines={1} accessibilityRole="header">
+          <AppText variant="headerTitle" numberOfLines={1}>
             {title}
           </AppText>
         ) : null}
@@ -37,6 +50,7 @@ export function ScreenHeader({ title, subtitle, leading = 'back', onLeadingPress
         ) : null}
       </View>
       <View style={[styles.side, styles.actions]}>
+        {trailing}
         {actions.map((action) => (
           <IconButton
             key={action.label}
@@ -44,6 +58,7 @@ export function ScreenHeader({ title, subtitle, leading = 'back', onLeadingPress
             onPress={action.onPress}
             accessibilityLabel={action.label}
             color={action.color}
+            disabled={action.disabled}
           />
         ))}
       </View>
@@ -59,7 +74,7 @@ const createStyles = ({ layout, spacing }) =>
       alignItems: 'center',
       paddingHorizontal: layout.gutter - spacing.sm,
     },
-    side: { width: 80, flexDirection: 'row', alignItems: 'center' },
-    actions: { justifyContent: 'flex-end' },
+    side: { width: layout.headerSide, flexDirection: 'row', alignItems: 'center' },
+    actions: { justifyContent: 'flex-end', gap: spacing.xxs },
     center: { flex: 1, alignItems: 'center' },
   });

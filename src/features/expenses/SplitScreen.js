@@ -16,7 +16,7 @@ import {
   Checkbox,
   Money,
   Screen,
-  ScreenHeader,
+  Header,
   SectionHeader,
   SegmentedControl,
   useFormatMoney,
@@ -73,7 +73,7 @@ export default function SplitScreen() {
   );
   const [inputs, setInputs] = useState({});
 
-  if (!draft || !snapshot) return <Screen header={<ScreenHeader />} />;
+  if (!draft || !snapshot) return <Screen header={<Header />} />;
 
   const { group, members } = snapshot;
   const currency = group.currency;
@@ -132,7 +132,7 @@ export default function SplitScreen() {
       padded={false}
       keyboard
       header={
-        <ScreenHeader
+        <Header
           title={t('split.header')}
           subtitle={t('split.subtitle', {
             amount: formatMoney(total, currency),
@@ -182,7 +182,7 @@ export default function SplitScreen() {
         title={t('split.included')}
         trailing={
           <Button
-            variant="text"
+            variant="ghost"
             title={allIncluded ? t('common.none') : t('common.all')}
             onPress={toggleAll}
           />

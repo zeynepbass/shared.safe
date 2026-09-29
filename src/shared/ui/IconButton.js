@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet } from 'react-native';
 
-import { useTheme } from '@/shared/theme';
+import { useTheme, useThemedStyles } from '@/shared/theme';
 
 import { Icon } from './Icon';
 
@@ -8,27 +8,37 @@ export function IconButton({
   icon,
   onPress,
   accessibilityLabel,
-  size = 22,
+  accessibilityHint,
+  size,
   color = 'text',
   disabled,
   style,
 }) {
-  const { layout } = useTheme();
+  const { layout, iconSize } = useTheme();
+  const styles = useThemedStyles(createStyles);
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: Boolean(disabled) }}
       hitSlop={layout.hitSlop}
       style={({ pressed }) => [styles.base, pressed && styles.pressed, style]}
     >
-      <Icon icon={icon} size={size} color={disabled ? 'textSubtle' : color} />
+      <Icon icon={icon} size={size ?? iconSize.xxl} color={disabled ? 'textSubtle' : color} />
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  base: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  pressed: { opacity: 0.6 },
-});
+const createStyles = ({ layout, opacity }) =>
+  StyleSheet.create({
+    base: {
+      width: layout.iconButton,
+      height: layout.iconButton,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    pressed: { opacity: opacity.pressedSubtle },
+  });

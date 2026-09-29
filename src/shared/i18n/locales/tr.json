@@ -21,7 +21,8 @@
   },
   "keypad": {
     "backspace": "Sil",
-    "decimal": "Ondalık ayırıcı"
+    "decimal": "Ondalık ayırıcı",
+    "clearHint": "Tutarı temizlemek için basılı tut"
   },
   "theme": {
     "title": "Tema",
@@ -233,5 +234,18 @@
     "language": "Dil",
     "about": "Hakkında",
     "version": "Sürüm {{version}}"
+  },
+  "amountInput": { "label": "Tutar" },
+  "avatarGroup": { "label": "{{count}} kişi: {{names}}" },
+  "snackbar": { "actionAvailable": "{{action}} seçeneği var" },
+  "offlineBanner": {
+    "message": "Çevrimdışı · değişiklikler cihazda saklanıyor",
+    "pending": "Çevrimdışı · {{count}} değişiklik bekliyor"
+  },
+  "sync": {
+    "synced": "Eşitlendi",
+    "pending": "Bekleyen",
+    "offline": "Çevrimdışı",
+    "error": "Eşitlenemedi"
   }
 }

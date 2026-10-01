@@ -6,10 +6,19 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ortakkasa.app"
     },
     "android": {
+      "package": "com.ortakkasa.app",
       "adaptiveIcon": {
         "backgroundColor": "#F2F2F3",
         "foregroundImage": "./assets/android-icon-foreground.png",

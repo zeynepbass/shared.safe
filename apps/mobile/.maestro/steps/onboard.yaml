@@ -1,0 +1,38 @@
+# From a fresh install to the (empty) groups screen: profile, recovery phrase, word check.
+appId: com.ortakkasa.app
+---
+- launchApp:
+    clearState: true
+    # The recovery secret lives in the keychain, which survives clearState on iOS.
+    clearKeychain: true
+- tapOn:
+    id: onboarding-skip
+- tapOn:
+    id: profile-name
+- inputText: Deniz
+- pressKey: Enter
+
+# The phrase is shown; say it is written down and go on to the check.
+- tapOn:
+    id: recovery-written
+- tapOn:
+    id: recovery-continue
+
+# Three words are asked, each with three choices. The flow cannot know the words, so it tries
+# the choices in turn; a wrong pick can simply be corrected, as a person would.
+- runFlow:
+    file: pick-recovery-word.yaml
+    env:
+      QUESTION: 0
+- runFlow:
+    file: pick-recovery-word.yaml
+    env:
+      QUESTION: 1
+- runFlow:
+    file: pick-recovery-word.yaml
+    env:
+      QUESTION: 2
+- tapOn:
+    id: recovery-finish
+- assertVisible:
+    id: groups-create

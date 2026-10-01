@@ -1,12 +1,11 @@
 import { Check } from 'lucide-react-native';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { useTheme, useThemedStyles } from '@/shared/theme';
+import { touchSlop, useThemedStyles } from '@/shared/theme';
 
 import { Icon } from './Icon';
 
-export function Checkbox({ checked, onChange, accessibilityLabel, size = 22 }) {
-  const { layout } = useTheme();
+export function Checkbox({ checked, onChange, accessibilityLabel, size = 22, testID }) {
   const styles = useThemedStyles(createStyles);
   return (
     <Pressable
@@ -14,7 +13,8 @@ export function Checkbox({ checked, onChange, accessibilityLabel, size = 22 }) {
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
       accessibilityLabel={accessibilityLabel}
-      hitSlop={layout.hitSlop}
+      testID={testID}
+      hitSlop={touchSlop(size)}
       style={[styles.box, { width: size, height: size }, checked && styles.checked]}
     >
       {checked ? (
@@ -30,7 +30,7 @@ const createStyles = ({ colors, borderWidth }) =>
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: borderWidth.hairline,
-      borderColor: colors.borderStrong,
+      borderColor: colors.controlBorder,
     },
     checked: { backgroundColor: colors.primary, borderColor: colors.primary },
   });

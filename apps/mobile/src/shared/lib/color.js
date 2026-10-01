@@ -11,6 +11,13 @@ export function luminance(hex) {
   return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 }
 
+// WCAG contrast ratio between two colours, from 1 (the same) to 21 (black on white).
+export function contrastRatio(a, b) {
+  const [lighter, darker] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+// Whichever of the two inks is easier to read on `hex`.
 export function readableTextOn(hex, { dark = '#1D1F20', light = '#FFFFFF' } = {}) {
-  return luminance(hex) > 0.4 ? dark : light;
+  return contrastRatio(hex, dark) >= contrastRatio(hex, light) ? dark : light;
 }

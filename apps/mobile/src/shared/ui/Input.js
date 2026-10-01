@@ -48,7 +48,7 @@ export const Input = forwardRef(function Input(
         ) : null}
         <TextInput
           ref={ref}
-          placeholderTextColor={colors.textSubtle}
+          placeholderTextColor={colors.textMuted}
           selectionColor={colors.primary}
           cursorColor={colors.primary}
           editable={!disabled}

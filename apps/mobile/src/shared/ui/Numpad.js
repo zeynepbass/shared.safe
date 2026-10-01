@@ -46,6 +46,7 @@ export function Numpad({ onKey, onClear, decimalSeparator, disabled = false, sty
               accessibilityLabel={labelFor(key)}
               accessibilityHint={key === 'backspace' && onClear ? t('keypad.clearHint') : undefined}
               accessibilityState={{ disabled }}
+              testID={`numpad-${key}`}
               style={({ pressed }) => [styles.key, pressed && styles.pressed]}
             >
               {key === 'backspace' ? (

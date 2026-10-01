@@ -1,0 +1,24 @@
+# From the empty groups screen to a new group "Ev" with two more members, Ali and Mert.
+# Names are plain ASCII: Maestro cannot type other characters on Android.
+appId: com.ortakkasa.app
+---
+- tapOn:
+    id: groups-create
+- tapOn:
+    id: group-name
+- inputText: Ev
+- tapOn:
+    id: group-member-name
+- inputText: Ali
+- tapOn:
+    id: group-member-add
+- tapOn:
+    id: group-member-name
+- inputText: Mert
+- tapOn:
+    id: group-member-add
+- hideKeyboard
+- tapOn:
+    id: group-submit
+- assertVisible:
+    id: expense-add

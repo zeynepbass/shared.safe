@@ -1,0 +1,15 @@
+appId: com.ortakkasa.app
+name: Add an expense
+---
+- runFlow: ../steps/onboard.yaml
+- runFlow: ../steps/create-group.yaml
+- runFlow: ../steps/add-expense.yaml
+
+# 120 split three ways: the other two owe the user 80 in total.
+- assertVisible: .*80.*
+
+# The expense is still there after a restart (it is stored on the device).
+- stopApp
+- launchApp
+- tapOn: Ev
+- assertVisible: Pazar

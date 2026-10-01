@@ -1,3 +1,6 @@
+// Text colours keep at least 4.5:1 against every background they are used on, and textSubtle and
+// controlBorder (large text, icons and the outline of unchecked controls) at least 3:1; see
+// __tests__/contrast.test.js before changing any of them.
 export const palette = {
   light: {
     bg: '#F2F2F3',
@@ -5,17 +8,18 @@ export const palette = {
     surfaceMuted: '#EBEBEC',
     border: '#E1E0E1',
     borderStrong: '#CFD0D1',
+    controlBorder: '#848586',
     divider: '#EBEBEC',
     text: '#1D1F20',
-    textMuted: '#878889',
-    textSubtle: '#A5A6A7',
+    textMuted: '#69696A',
+    textSubtle: '#858686',
     textOnPrimary: '#FFFFFF',
-    primary: '#5980A6',
+    primary: '#4B6C8C',
     primaryDisabled: '#ADBFD0',
     primarySoft: '#EEF6FF',
-    danger: '#BA3F39',
+    danger: '#B93F39',
     dangerSoft: '#FBE9E8',
-    success: '#227C45',
+    success: '#217843',
     successSoft: '#E4F2E9',
     textOnDanger: '#FFFFFF',
     inverse: '#1D1F20',
@@ -32,10 +36,11 @@ export const palette = {
     surfaceMuted: '#191B1D',
     border: '#26282B',
     borderStrong: '#333739',
+    controlBorder: '#66696B',
     divider: '#1E1F21',
     text: '#E4E6E8',
-    textMuted: '#7D7F81',
-    textSubtle: '#5E6062',
+    textMuted: '#8A8C8E',
+    textSubtle: '#67696B',
     textOnPrimary: '#131517',
     primary: '#80A6CB',
     primaryDisabled: '#4F6377',
@@ -95,7 +100,16 @@ export const layout = {
   emptyFigure: 112,
   readableWidth: 320,
   hitSlop: 8,
+  // Smallest area a control answers touches in (48dp on Android, 44pt on iOS); smaller controls
+  // extend theirs with touchSlop.
+  touchTarget: 48,
 };
+
+// The hitSlop that brings a control of `width` × `height` up to the touch target.
+export function touchSlop(width, height = width) {
+  const pad = (size) => Math.max(0, Math.ceil((layout.touchTarget - size) / 2));
+  return { top: pad(height), bottom: pad(height), left: pad(width), right: pad(width) };
+}
 
 export const controlHeight = { sm: 32, md: 44, lg: 56 };
 

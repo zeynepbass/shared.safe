@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { recoveryChallenge } from '@ortak-kasa/core/recovery';
 import { confirmRecovery, getRecoveryWords, useDb } from '@/shared/db';
+import { reportError } from '@/shared/monitoring';
 import { useThemedStyles } from '@/shared/theme';
 import { AppText, BottomBar, Button, Header, Screen, useSnackbar } from '@/shared/ui';
 
@@ -28,7 +29,7 @@ export default function RecoveryVerifyScreen({ mode = 'onboarding' }) {
     try {
       confirmRecovery(db);
     } catch (error) {
-      console.error(error);
+      reportError(error);
       return;
     }
     if (!onboarding) {
@@ -46,6 +47,7 @@ export default function RecoveryVerifyScreen({ mode = 'onboarding' }) {
             title={onboarding ? t('recovery.finish') : t('common.done')}
             onPress={finish}
             disabled={!allRight}
+            testID="recovery-finish"
           />
         </BottomBar>
       }
@@ -57,7 +59,7 @@ export default function RecoveryVerifyScreen({ mode = 'onboarding' }) {
         </AppText>
       </View>
 
-      {challenge.map(({ index, word, choices }) => {
+      {challenge.map(({ index, word, choices }, question) => {
         const choice = picked[index];
         const status = choice == null ? null : choice === word ? 'right' : 'wrong';
         return (
@@ -71,20 +73,22 @@ export default function RecoveryVerifyScreen({ mode = 'onboarding' }) {
                   variant="captionStrong"
                   color={status === 'right' ? 'success' : 'danger'}
                   accessibilityLiveRegion="polite"
+                  testID={`recovery-${status}-${question}`}
                 >
                   {status === 'right' ? t('recovery.right') : t('recovery.wrong')}
                 </AppText>
               ) : null}
             </View>
             <View style={styles.choices} accessibilityRole="radiogroup">
-              {choices.map((option) => {
+              {choices.map((option, position) => {
                 const selected = choice === option;
                 return (
                   <Pressable
                     key={option}
                     onPress={() => setPicked({ ...picked, [index]: option })}
                     accessibilityRole="radio"
-                    accessibilityState={{ selected }}
+                    accessibilityState={{ selected, checked: selected }}
+                    testID={`recovery-choice-${question}-${position}`}
                     accessibilityLabel={t('recovery.choiceLabel', {
                       number: index + 1,
                       word: option,

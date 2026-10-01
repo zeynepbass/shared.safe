@@ -5,14 +5,14 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
-  getGroupSnapshot,
+  getGroupBalances,
   recordSettlement,
   softDeleteSettlement,
   useDb,
   useDbQuery,
 } from '@/shared/db';
 import { simplifyDebts } from '@ortak-kasa/core/simplify';
-import { memberLabel, useGroupSummary } from '@/features/groups/useGroupSummary';
+import { memberLabel } from '@/features/groups/useGroupSummary';
 import { todayISO } from '@/shared/lib/dates';
 import { useThemedStyles } from '@/shared/theme';
 import {
@@ -39,8 +39,7 @@ export default function BalancesScreen() {
   const snackbar = useSnackbar();
   const formatMoney = useFormatMoney();
   const styles = useThemedStyles(createStyles);
-  const { data: snapshot } = useDbQuery((d) => getGroupSnapshot(d, groupId), [groupId], TABLES);
-  const summary = useGroupSummary(snapshot);
+  const { data: summary } = useDbQuery((d) => getGroupBalances(d, groupId), [groupId], TABLES);
 
   const transfers = useMemo(
     () =>
@@ -104,7 +103,7 @@ export default function BalancesScreen() {
       {transfers.length === 0 ? (
         <EmptyState icon={CheckCheck} title={t('balances.allSettled')} />
       ) : (
-        transfers.map((transfer) => {
+        transfers.map((transfer, position) => {
           const from = memberById.get(transfer.from);
           const to = memberById.get(transfer.to);
           const fromLabel = memberLabel(from, t);
@@ -149,6 +148,8 @@ export default function BalancesScreen() {
                 size="sm"
                 fullWidth={false}
                 onPress={() => markPaid(transfer)}
+                accessibilityLabel={t('balances.paidA11y', { from: fromLabel, to: toLabel })}
+                testID={`settle-${position}`}
               />
             </View>
           );

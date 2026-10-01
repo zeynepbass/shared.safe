@@ -23,6 +23,7 @@ import { isoFromTimestamp } from '@/shared/lib/dates';
 import { useDateFormat } from '@/shared/lib/useDateFormat';
 import { SUPPORTED_LANGUAGES } from '@/shared/i18n';
 import { CURRENCIES, CURRENCY_CODES } from '@ortak-kasa/core/money';
+import { reportError } from '@/shared/monitoring';
 import { useThemedStyles } from '@/shared/theme';
 import {
   AppText,
@@ -86,7 +87,7 @@ export default function SettingsScreen() {
       if (result === 'empty') snackbar.show({ message: t('settings.exportEmpty') });
       if (result === 'unavailable') snackbar.show({ message: t('settings.exportUnavailable') });
     } catch (error) {
-      console.error(error);
+      reportError(error);
       Alert.alert(t('common.error'));
     } finally {
       setExporting(false);
@@ -104,7 +105,7 @@ export default function SettingsScreen() {
           try {
             wipeDevice(db);
           } catch (error) {
-            console.error(error);
+            reportError(error);
             Alert.alert(t('common.error'));
           }
         },

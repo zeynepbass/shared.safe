@@ -10,6 +10,8 @@
     "server": "npm run start --workspace @ortak-kasa/sync-server",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
+    "bench": "npm run bench --workspace @ortak-kasa/mobile",
+    "e2e": "npm run e2e --workspace @ortak-kasa/mobile",
     "format": "prettier --write ."
   },
   "devDependencies": {
@@ -23,6 +25,7 @@
     "better-sqlite3@13.0.3": true,
     "unrs-resolver@1.12.2": true,
     "react-native-libsodium@1.7.0": true,
+    "@sentry/cli@2.58.4": true,
     "fsevents": false
   }
 }

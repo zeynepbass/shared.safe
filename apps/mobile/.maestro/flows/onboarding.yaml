@@ -1,0 +1,12 @@
+appId: com.ortakkasa.app
+name: Onboarding
+tags:
+  - smoke
+---
+- runFlow: ../steps/onboard.yaml
+
+# Onboarding does not come back after a restart.
+- stopApp
+- launchApp
+- assertVisible:
+    id: groups-create

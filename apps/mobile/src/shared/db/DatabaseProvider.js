@@ -12,9 +12,15 @@ function DrizzleProvider({ children }) {
   return <DbContext.Provider value={db}>{children}</DbContext.Provider>;
 }
 
-export function DatabaseProvider({ children }) {
+const runNow = (run) => run();
+
+// `around` wraps opening and migrating the database, e.g. to time it.
+export function DatabaseProvider({ children, around = runNow }) {
   return (
-    <SQLiteProvider databaseName={DATABASE_NAME} onInit={migrateDatabase}>
+    <SQLiteProvider
+      databaseName={DATABASE_NAME}
+      onInit={(sqlite) => around(() => migrateDatabase(sqlite))}
+    >
       <DrizzleProvider>{children}</DrizzleProvider>
     </SQLiteProvider>
   );

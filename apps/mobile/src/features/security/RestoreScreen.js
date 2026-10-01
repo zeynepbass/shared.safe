@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { useSync } from '@/features/sync/SyncProvider';
 import { normalizePhrase, RECOVERY_WORD_COUNT, secretFromPhrase } from '@ortak-kasa/core/recovery';
 import { restoreAccount, useDb, vaultAccess } from '@/shared/db';
+import { reportError } from '@/shared/monitoring';
 import { useThemedStyles } from '@/shared/theme';
 import { AppText, BottomBar, Button, Header, InfoBox, Input, Screen } from '@/shared/ui';
 
@@ -40,7 +41,7 @@ export default function RestoreScreen() {
       else if (e.message === 'offline' || e.message === 'timeout' || e.message === 'closed') {
         setError(t('restore.offline'));
       } else {
-        console.error(e);
+        reportError(e);
         setError(t('common.error'));
       }
     } finally {

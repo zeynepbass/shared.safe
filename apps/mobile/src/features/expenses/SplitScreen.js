@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
-import { getGroupSnapshot, useDbQuery } from '@/shared/db';
+import { getGroupWithMembers, useDbQuery } from '@/shared/db';
 import { allocateProportionally, computeSplit, FULL_PERCENT } from '@ortak-kasa/core/split';
 import { memberLabel } from '@/features/groups/useGroupSummary';
 import { currencySymbol, formatAmountInput, parseAmountInput } from '@ortak-kasa/core/money';
@@ -68,7 +68,7 @@ export default function SplitScreen() {
   const formatMoney = useFormatMoney();
   const draft = useDraft();
   const { data: snapshot } = useDbQuery(
-    (db) => getGroupSnapshot(db, groupId),
+    (db) => getGroupWithMembers(db, groupId),
     [groupId],
     ['members'],
   );
@@ -247,7 +247,7 @@ function WeightInput({ type, currency, value, onChange, accessibilityLabel }) {
         selectTextOnFocus
         accessibilityLabel={accessibilityLabel}
         placeholder="0"
-        placeholderTextColor={colors.textSubtle}
+        placeholderTextColor={colors.textMuted}
         selectionColor={colors.primary}
         style={styles.inputText}
       />

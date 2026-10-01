@@ -12,24 +12,24 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react-native';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
-  getGroupSnapshot,
+  getGroupOverview,
   isRemovedFromGroup,
   restoreExpense,
   softDeleteExpense,
   useDb,
   useDbQuery,
 } from '@/shared/db';
-import { effectOnMember } from '@ortak-kasa/core/balances';
 import { categoryIcon } from '@/features/expenses/categories';
 import { useSync } from '@/features/sync/SyncProvider';
 import { currencySymbol } from '@ortak-kasa/core/money';
 import { useDateFormat } from '@/shared/lib/useDateFormat';
+import { reportError } from '@/shared/monitoring';
 import { useThemedStyles } from '@/shared/theme';
 import {
   AppText,
@@ -53,9 +53,10 @@ import {
 } from '@/shared/ui';
 
 import { buildTimeline } from './timeline';
-import { memberLabel, useGroupSummary } from './useGroupSummary';
+import { memberLabel } from './useGroupSummary';
 
 const TABLES = ['groups', 'members', 'expenses', 'expense_shares', 'settlements'];
+const PAGE = 200;
 
 export default function GroupDetailScreen() {
   const { groupId } = useLocalSearchParams();
@@ -66,12 +67,13 @@ export default function GroupDetailScreen() {
   const styles = useThemedStyles(createStyles);
   const dates = useDateFormat();
   const formatMoney = useFormatMoney();
-  const { data: snapshot, loading } = useDbQuery(
-    (db) => getGroupSnapshot(db, groupId),
-    [groupId],
+  // The list starts with the newest expenses and reads further back as it is scrolled.
+  const [limit, setLimit] = useState(PAGE);
+  const { data: summary, loading } = useDbQuery(
+    (db) => getGroupOverview(db, groupId, { limit }),
+    [groupId, limit],
     TABLES,
   );
-  const summary = useGroupSummary(snapshot);
   const { data: removed } = useDbQuery(
     (d) => isRemovedFromGroup(d, groupId),
     [groupId],
@@ -102,7 +104,7 @@ export default function GroupDetailScreen() {
     try {
       softDeleteExpense(db, expense.id);
     } catch (error) {
-      console.error(error);
+      reportError(error);
       return;
     }
     snackbar.show({
@@ -149,6 +151,7 @@ export default function GroupDetailScreen() {
               size="md"
               onPress={() => router.push(`/groups/${group.id}/balances`)}
               style={styles.flex}
+              testID="group-settle"
             />
             {removed ? null : (
               <Button
@@ -186,9 +189,10 @@ export default function GroupDetailScreen() {
   );
 
   const renderExpense = (expense) => {
-    const effect = self ? effectOnMember(expense, self.id) : 0;
-    const involved =
-      expense.payerId === self?.id || expense.shares.some((s) => s.memberId === self?.id);
+    // What the expense did to the user's balance: what they paid less their share of it.
+    const paid = expense.payerId === self?.id ? expense.amount : 0;
+    const effect = paid - (expense.selfShare ?? 0);
+    const involved = expense.payerId === self?.id || expense.selfShare != null;
     const paidBy =
       expense.payerId === self?.id
         ? t('groupDetail.paidBySelf', { amount: formatMoney(expense.amount, currency) })
@@ -282,7 +286,12 @@ export default function GroupDetailScreen() {
             title={t('groupDetail.emptyTitle')}
             description={t('groupDetail.emptyBody')}
           >
-            <Button title={t('groupDetail.emptyAction')} corners onPress={addExpense} />
+            <Button
+              title={t('groupDetail.emptyAction')}
+              corners
+              onPress={addExpense}
+              testID="expense-add"
+            />
             <Button
               title={t('groupDetail.addMember')}
               icon={UserPlus}
@@ -304,9 +313,13 @@ export default function GroupDetailScreen() {
               }
               return item.kind === 'expense' ? renderExpense(item.e) : renderSettlement(item.s);
             }}
+            onEndReached={() => {
+              if (summary.hasMore) setLimit(summary.expenses.length + PAGE);
+            }}
+            onEndReachedThreshold={0.5}
             contentContainerStyle={styles.listContent}
           />
-          <Fab title={t('groupDetail.addExpense')} onPress={addExpense} />
+          <Fab title={t('groupDetail.addExpense')} onPress={addExpense} testID="expense-add" />
         </>
       )}
     </SafeAreaView>

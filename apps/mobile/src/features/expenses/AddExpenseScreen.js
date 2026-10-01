@@ -7,7 +7,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import {
   createExpense,
   getExpense,
-  getGroupSnapshot,
+  getGroupWithMembers,
   updateExpense,
   useDb,
   useDbQuery,
@@ -16,6 +16,7 @@ import { memberLabel, selfMember } from '@/features/groups/useGroupSummary';
 import { todayISO } from '@/shared/lib/dates';
 import { applyKeypadInput, formatAmountInput } from '@ortak-kasa/core/money';
 import { useDateFormat } from '@/shared/lib/useDateFormat';
+import { reportError } from '@/shared/monitoring';
 import { useTheme, useThemedStyles } from '@/shared/theme';
 import {
   AmountInput,
@@ -51,7 +52,7 @@ const TABLES = ['groups', 'members', 'expenses'];
 
 async function loadForm(db, groupId, expenseId) {
   const [snapshot, expense] = await Promise.all([
-    getGroupSnapshot(db, groupId),
+    getGroupWithMembers(db, groupId),
     expenseId ? getExpense(db, expenseId) : null,
   ]);
   return { snapshot, expense };
@@ -64,7 +65,7 @@ export default function AddExpenseScreen() {
   const snackbar = useSnackbar();
   const dates = useDateFormat();
   const styles = useThemedStyles(createStyles);
-  const { iconSize } = useTheme();
+  const { iconSize, layout, spacing } = useTheme();
   const draft = useDraft();
   const [sheet, setSheet] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -131,7 +132,7 @@ export default function AddExpenseScreen() {
         updateDraft({ receiptUri: result.uri });
       }
     } catch (error) {
-      console.error(error);
+      reportError(error);
       Alert.alert(t('common.error'));
     }
   };
@@ -162,7 +163,7 @@ export default function AddExpenseScreen() {
       snackbar.show({ message: t(draft.expenseId ? 'expenseForm.updated' : 'expenseForm.saved') });
       router.back();
     } catch (error) {
-      console.error(error);
+      reportError(error);
       Alert.alert(t('common.error'));
       setSaving(false);
     }
@@ -196,7 +197,13 @@ export default function AddExpenseScreen() {
       }
       footer={
         <BottomBar>
-          <Button title={t('common.save')} onPress={save} disabled={!canSave} loading={saving} />
+          <Button
+            title={t('common.save')}
+            onPress={save}
+            disabled={!canSave}
+            loading={saving}
+            testID="expense-save"
+          />
         </BottomBar>
       }
     >
@@ -213,6 +220,7 @@ export default function AddExpenseScreen() {
               accessibilityLabel={
                 draft.receiptUri ? t('expenseForm.receiptAttached') : t('expenseForm.receipt')
               }
+              hitSlop={layout.hitSlop + spacing.xs}
               style={styles.receiptButton}
             >
               <Icon icon={draft.receiptUri ? Check : Receipt} size={iconSize.sm} color="primary" />
@@ -231,6 +239,7 @@ export default function AddExpenseScreen() {
             onChangeText={(title) => updateDraft({ title })}
             maxLength={60}
             returnKeyType="done"
+            testID="expense-title"
           />
         </View>
 

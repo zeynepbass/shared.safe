@@ -11,6 +11,7 @@ import {
   useDb,
   useDbQuery,
 } from '@/shared/db';
+import { reportError } from '@/shared/monitoring';
 import { useThemedStyles } from '@/shared/theme';
 import {
   Avatar,
@@ -56,7 +57,7 @@ export default function MembersScreen() {
       if (error.code === 'memberInUse')
         Alert.alert(t('members.inUseTitle'), t('members.inUseBody'));
       else {
-        console.error(error);
+        reportError(error);
         Alert.alert(t('common.error'));
       }
     }

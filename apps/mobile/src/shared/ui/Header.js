@@ -29,6 +29,7 @@ export function Header({
             icon={leadingIcon}
             onPress={onLeadingPress ?? (() => router.back())}
             accessibilityLabel={leading === 'close' ? t('common.close') : t('common.back')}
+            testID={leading === 'close' ? 'header-close' : 'header-back'}
           />
         ) : null}
       </View>

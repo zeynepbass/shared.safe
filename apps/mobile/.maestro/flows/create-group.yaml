@@ -1,0 +1,12 @@
+appId: com.ortakkasa.app
+name: Create a group
+---
+- runFlow: ../steps/onboard.yaml
+- runFlow: ../steps/create-group.yaml
+
+# The group is listed on the groups screen.
+- tapOn:
+    id: header-back
+- assertVisible: Ev
+- assertVisible:
+    id: groups-new

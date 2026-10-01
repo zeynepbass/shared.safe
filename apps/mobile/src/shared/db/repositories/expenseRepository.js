@@ -1,10 +1,10 @@
-import { and, desc, eq, inArray, isNull } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns, inArray, isNull } from 'drizzle-orm';
 
 import * as groupDoc from '@ortak-kasa/core/groupDoc';
 
 import { DbValidationError } from '../errors';
 import { newId } from '../ids';
-import { expenses } from '../schema';
+import { expenses, expenseShares } from '../schema';
 import { commitGroupChange } from '../sync/groupDocs';
 import { listShares, listSharesOfGroups } from './expenseShareRepository';
 
@@ -105,4 +105,49 @@ export function listExpensesForGroups(db, groupIds) {
 
 export function listExpenses(db, groupId) {
   return listExpensesForGroups(db, [groupId]);
+}
+
+const newestFirst = [desc(expenses.spentOn), desc(expenses.createdAt)];
+const activeIn = (groupId) => and(eq(expenses.groupId, groupId), isNull(expenses.deletedAt));
+
+// Active expenses of a group without their shares, newest first: for totals and charts.
+export function listExpenseRows(db, groupId) {
+  return db
+    .select()
+    .from(expenses)
+    .where(activeIn(groupId))
+    .orderBy(...newestFirst)
+    .all();
+}
+
+// The same rows with one share each: `selfShare` is what `memberId` owes of the expense, or null
+// when they have no part in it. That is all a list of expenses seen by one member needs.
+// `limit` keeps it to the newest ones.
+export function listExpensesWithShareOf(db, groupId, memberId, { limit } = {}) {
+  const query = db
+    .select({ ...getTableColumns(expenses), selfShare: expenseShares.amount })
+    .from(expenses)
+    .leftJoin(
+      expenseShares,
+      and(
+        eq(expenseShares.expenseId, expenses.id),
+        eq(expenseShares.memberId, memberId ?? ''),
+        isNull(expenseShares.deletedAt),
+      ),
+    )
+    .where(activeIn(groupId))
+    .orderBy(...newestFirst);
+  return (limit ? query.limit(limit) : query).all();
+}
+
+export function getLastExpense(db, groupId) {
+  return (
+    db
+      .select()
+      .from(expenses)
+      .where(activeIn(groupId))
+      .orderBy(...newestFirst)
+      .limit(1)
+      .get() ?? null
+  );
 }

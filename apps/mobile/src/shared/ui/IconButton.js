@@ -13,6 +13,7 @@ export function IconButton({
   color = 'text',
   disabled,
   style,
+  testID,
 }) {
   const { layout, iconSize } = useTheme();
   const styles = useThemedStyles(createStyles);
@@ -24,6 +25,7 @@ export function IconButton({
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: Boolean(disabled) }}
+      testID={testID}
       hitSlop={layout.hitSlop}
       style={({ pressed }) => [styles.base, pressed && styles.pressed, style]}
     >

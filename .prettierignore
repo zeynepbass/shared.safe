@@ -4,4 +4,5 @@ dist
 design
 ios
 android
-src/shared/db/migrations/
+**/src/shared/db/migrations/
+coverage

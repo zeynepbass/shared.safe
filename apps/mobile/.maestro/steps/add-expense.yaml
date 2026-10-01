@@ -1,0 +1,18 @@
+# From a group's screen: an expense of 120, paid by the user and split equally between everyone.
+appId: com.ortakkasa.app
+---
+- tapOn:
+    id: expense-add
+- tapOn:
+    id: numpad-1
+- tapOn:
+    id: numpad-2
+- tapOn:
+    id: numpad-0
+- tapOn:
+    id: expense-title
+- inputText: Pazar
+- pressKey: Enter
+- tapOn:
+    id: expense-save
+- assertVisible: Pazar

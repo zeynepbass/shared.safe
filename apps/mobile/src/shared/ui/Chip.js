@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet } from 'react-native';
 
-import { useTheme, useThemedStyles } from '@/shared/theme';
+import { touchSlop, useTheme, useThemedStyles } from '@/shared/theme';
 
 import { AppText } from './AppText';
 import { Icon } from './Icon';
@@ -14,11 +14,16 @@ export function Chip({
   role = 'radio',
   accessibilityLabel,
   style,
+  testID,
 }) {
-  const { iconSize } = useTheme();
+  const { iconSize, layout } = useTheme();
   const styles = useThemedStyles(createStyles);
   const color = selected ? 'textOnPrimary' : 'text';
-  const state = role === 'checkbox' ? { checked: selected, disabled } : { selected, disabled };
+  // VoiceOver reads `selected`, TalkBack reads `checked` for radios and checkboxes.
+  const state =
+    role === 'checkbox'
+      ? { checked: selected, disabled }
+      : { selected, checked: selected, disabled };
 
   return (
     <Pressable
@@ -27,6 +32,8 @@ export function Chip({
       accessibilityRole={role}
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={state}
+      testID={testID}
+      hitSlop={touchSlop(layout.touchTarget, layout.chipHeight)}
       style={({ pressed }) => [
         styles.chip,
         selected && styles.selected,
@@ -46,7 +53,7 @@ export function Chip({
 const createStyles = ({ colors, spacing, layout, borderWidth, radius, opacity }) =>
   StyleSheet.create({
     chip: {
-      height: layout.chipHeight,
+      minHeight: layout.chipHeight,
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.xs,

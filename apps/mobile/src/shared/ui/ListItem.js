@@ -24,6 +24,7 @@ export function ListItem({
   accessibilityActions,
   onAccessibilityAction,
   style,
+  testID,
 }) {
   const { iconSize } = useTheme();
   const styles = useThemedStyles(createStyles);
@@ -42,6 +43,7 @@ export function ListItem({
       accessibilityState={interactive ? { disabled } : undefined}
       accessibilityActions={accessibilityActions}
       onAccessibilityAction={onAccessibilityAction}
+      testID={testID}
       style={
         interactive
           ? ({ pressed }) => [...baseStyle, pressed && styles.pressed, style]

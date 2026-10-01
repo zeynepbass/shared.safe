@@ -1,9 +1,11 @@
 import { Camera } from 'lucide-react-native';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { useThemedStyles } from '@/shared/theme';
+import { touchSlop, useThemedStyles } from '@/shared/theme';
 
 import { Icon } from './Icon';
+
+const RING = 40;
 
 // `onPhotoPress` adds the dashed camera tile after the swatches; while a photo is in use
 // (`photoSelected`) that tile carries the selection ring instead of a colour.
@@ -26,8 +28,9 @@ export function ColorPicker({
             key={color}
             onPress={() => onChange(color)}
             accessibilityRole="radio"
-            accessibilityState={{ selected }}
+            accessibilityState={{ selected, checked: selected }}
             accessibilityLabel={`${accessibilityLabel ?? ''} ${index + 1}`.trim()}
+            hitSlop={touchSlop(RING)}
             style={[styles.ring, selected && styles.ringSelected]}
           >
             <View style={[styles.swatch, { backgroundColor: color }]} />
@@ -40,6 +43,7 @@ export function ColorPicker({
           accessibilityRole="button"
           accessibilityState={{ selected: photoSelected }}
           accessibilityLabel={photoLabel}
+          hitSlop={touchSlop(RING)}
           style={[styles.ring, photoSelected && styles.ringSelected]}
         >
           <View style={styles.photo}>
@@ -55,8 +59,8 @@ const createStyles = ({ colors, spacing, borderWidth }) =>
   StyleSheet.create({
     row: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm },
     ring: {
-      width: 40,
-      height: 40,
+      width: RING,
+      height: RING,
       padding: 3,
       borderWidth: borderWidth.thick,
       borderColor: 'transparent',

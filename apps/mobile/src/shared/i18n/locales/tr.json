@@ -265,7 +265,8 @@
     "allSettled": "Herkes ödeşmiş. Önerilecek ödeme yok.",
     "footnote": "“Ödendi” bir ödeme kaydı oluşturur ve bakiyeleri hemen günceller. Yanlışlıkla işaretlersen geri alabilirsin.",
     "memberA11y": "{{name}}, bakiye {{amount}}",
-    "transferA11y": "{{from}}, {{to}} kişisine {{amount}} ödemeli"
+    "transferA11y": "{{from}}, {{to}} kişisine {{amount}} ödemeli",
+    "paidA11y": "Ödendi: {{from}}, {{to}} kişisine ödedi"
   },
   "settings": {
     "header": "Ayarlar",

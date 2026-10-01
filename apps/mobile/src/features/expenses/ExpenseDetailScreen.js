@@ -5,7 +5,7 @@ import { Image, StyleSheet, View } from 'react-native';
 
 import {
   getExpense,
-  getGroupSnapshot,
+  getGroupWithMembers,
   restoreExpense,
   softDeleteExpense,
   useDb,
@@ -36,7 +36,7 @@ import { categoryIcon } from './categories';
 
 async function loadDetail(db, groupId, expenseId) {
   const [snapshot, expense] = await Promise.all([
-    getGroupSnapshot(db, groupId),
+    getGroupWithMembers(db, groupId),
     getExpense(db, expenseId),
   ]);
   return { snapshot, expense };

@@ -9,6 +9,7 @@ import { Alert, StyleSheet, View } from 'react-native';
 import { useSettings } from '@/features/settings/SettingsProvider';
 import { createGroup, useDb } from '@/shared/db';
 import { CURRENCIES, CURRENCY_CODES } from '@ortak-kasa/core/money';
+import { reportError } from '@/shared/monitoring';
 import { useTheme, useThemedStyles } from '@/shared/theme';
 import {
   AppText,
@@ -81,7 +82,7 @@ export default function CreateGroupScreen() {
     try {
       id = createGroup(db, { name, type, currency, members });
     } catch (error) {
-      console.error(error);
+      reportError(error);
       Alert.alert(t('common.error'));
       return;
     }
@@ -102,6 +103,7 @@ export default function CreateGroupScreen() {
             onPress={submit}
             loading={isSubmitting}
             disabled={isSubmitted && Object.keys(errors).length > 0}
+            testID="group-submit"
           />
         </BottomBar>
       }
@@ -123,6 +125,7 @@ export default function CreateGroupScreen() {
               maxLength={NAME_MAX}
               returnKeyType="done"
               size="lg"
+              testID="group-name"
             />
           )}
         />
@@ -225,12 +228,14 @@ export default function CreateGroupScreen() {
               maxLength={NAME_MAX}
               returnKeyType="done"
               style={styles.addInput}
+              testID="group-member-name"
             />
             <IconButton
               icon={Plus}
               onPress={addMember}
               accessibilityLabel={t('groupForm.addMember')}
               style={styles.addButton}
+              testID="group-member-add"
             />
           </View>
         </View>

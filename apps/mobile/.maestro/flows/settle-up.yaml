@@ -1,0 +1,30 @@
+appId: com.ortakkasa.app
+name: Settle up
+---
+- runFlow: ../steps/onboard.yaml
+- runFlow: ../steps/create-group.yaml
+- runFlow: ../steps/add-expense.yaml
+
+# Two payments are suggested (Ali and Mert each owe 40). Marking one paid leaves the other
+# first in the list; after the second nothing is left to pay.
+- tapOn:
+    id: group-settle
+- assertVisible:
+    id: settle-1
+- tapOn:
+    id: settle-0
+- assertNotVisible:
+    id: settle-1
+- tapOn:
+    id: settle-0
+- assertNotVisible:
+    id: settle-0
+
+# Still settled after a restart.
+- stopApp
+- launchApp
+- tapOn: Ev
+- tapOn:
+    id: group-settle
+- assertNotVisible:
+    id: settle-0

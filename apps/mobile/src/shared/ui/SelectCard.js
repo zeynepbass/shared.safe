@@ -6,13 +6,14 @@ import { useThemedStyles } from '@/shared/theme';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
 
-export function SelectCard({ icon, title, subtitle, selected, onPress, style }) {
+export function SelectCard({ icon, title, subtitle, selected, onPress, style, testID }) {
   const styles = useThemedStyles(createStyles);
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="radio"
-      accessibilityState={{ selected }}
+      accessibilityState={{ selected, checked: selected }}
+      testID={testID}
       accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
       style={[styles.card, selected && styles.selected, style]}
     >

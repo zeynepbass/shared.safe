@@ -265,7 +265,8 @@
     "allSettled": "Everyone is settled. No payments to suggest.",
     "footnote": "“Paid” records a payment and updates balances right away. You can undo it if you tap it by mistake.",
     "memberA11y": "{{name}}, balance {{amount}}",
-    "transferA11y": "{{from}} should pay {{to}} {{amount}}"
+    "transferA11y": "{{from}} should pay {{to}} {{amount}}",
+    "paidA11y": "Paid: {{from}} paid {{to}}"
   },
   "settings": {
     "header": "Settings",

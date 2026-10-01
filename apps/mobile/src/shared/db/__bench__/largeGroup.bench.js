@@ -1,16 +1,19 @@
+import { computeBalances } from '@ortak-kasa/core/balances';
 import { addSettlement, putExpense } from '@ortak-kasa/core/groupDoc';
 import { simplifyDebts } from '@ortak-kasa/core/simplify';
 import { FULL_PERCENT } from '@ortak-kasa/core/split';
 
-import { summarizeGroup } from '@/features/groups/useGroupSummary';
 import { buildTimeline } from '@/features/groups/timeline';
 
 import {
   addMember,
   createExpense,
   createGroup,
+  getGroupBalances,
+  getGroupOverview,
   getGroupSnapshot,
   getGroupStats,
+  getGroupWithMembers,
   listGroupSummaries,
   listMembers,
   restoreExpense,
@@ -126,16 +129,25 @@ describe(`group with ${EXPENSES} expenses`, () => {
       forgetGroupDocs(db);
       return loadGroupDoc(db, groupId);
     });
-    const snapshot = record('group screen: read snapshot', () => getGroupSnapshot(db, groupId));
-    const summary = record('group screen: balances', () => summarizeGroup(snapshot));
-    const timeline = record('group screen: timeline rows', () =>
-      buildTimeline(snapshot.expenses, snapshot.settlements),
+    record('group screen: read (newest 200)', () => getGroupOverview(db, groupId, { limit: 200 }));
+    const overview = record('group screen: read (all)', () => getGroupOverview(db, groupId));
+    const timeline = record('group screen: timeline rows (all)', () =>
+      buildTimeline(overview.expenses, overview.settlements),
     );
+    const sheet = record('balances screen: read', () => getGroupBalances(db, groupId));
     record('balances screen: simplify debts', () =>
-      simplifyDebts(summary.balances, { order: memberIds }),
+      simplifyDebts(sheet.balances, { order: memberIds }),
     );
-    record('groups screen: all group summaries', () => listGroupSummaries(db));
-    record('stats screen: group stats', () => getGroupStats(db, groupId, { today: '2026-09-29' }));
+    record('groups screen: read', () => listGroupSummaries(db));
+    record('stats screen: read', () => getGroupStats(db, groupId, { today: '2026-09-29' }));
+    record('expense form: read', () => getGroupWithMembers(db, groupId));
+
+    // Everything loaded and summed in JS, which is what the screens above used to do; kept as
+    // the yardstick and as a check on the SQL sums.
+    const snapshot = record('reference: every expense with shares', () =>
+      getGroupSnapshot(db, groupId),
+    );
+    const reference = record('reference: balances in JS', () => computeBalances(snapshot));
 
     const created = [];
     record('write: add an expense', (i) => {
@@ -168,7 +180,8 @@ describe(`group with ${EXPENSES} expenses`, () => {
       ].join('\n'),
     );
 
-    expect(snapshot.expenses).toHaveLength(EXPENSES);
-    expect([...summary.balances.values()].reduce((sum, v) => sum + v, 0)).toBe(0);
+    expect(overview.expenses).toHaveLength(EXPENSES);
+    expect(sheet.balances).toEqual(reference);
+    expect([...sheet.balances.values()].reduce((sum, v) => sum + v, 0)).toBe(0);
   });
 });

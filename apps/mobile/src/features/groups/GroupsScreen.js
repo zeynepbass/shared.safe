@@ -111,6 +111,7 @@ export default function GroupsScreen() {
             icon={Plus}
             corners
             onPress={() => router.push('/groups/new')}
+            testID="groups-create"
           />
           <Button
             title={t('groups.joinWithCode')}
@@ -217,7 +218,11 @@ export default function GroupsScreen() {
           />
         ))}
       </ScrollView>
-      <Fab title={t('groups.newGroup')} onPress={() => router.push('/groups/new')} />
+      <Fab
+        title={t('groups.newGroup')}
+        onPress={() => router.push('/groups/new')}
+        testID="groups-new"
+      />
     </SafeAreaView>
   );
 }

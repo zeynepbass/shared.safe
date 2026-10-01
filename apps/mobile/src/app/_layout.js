@@ -1,7 +1,7 @@
 import '@/shared/i18n';
 
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useNavigationContainerRef } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
@@ -13,10 +13,14 @@ import { DatabaseProvider } from '@/shared/db';
 import { AppLock } from '@/features/security/AppLock';
 import { SettingsProvider, useSettings } from '@/features/settings/SettingsProvider';
 import { SyncProvider } from '@/features/sync/SyncProvider';
+import { initMonitoring, navigationIntegration, traced, wrapRoot } from '@/shared/monitoring';
 import { fontAssets, ThemeProvider, useTheme } from '@/shared/theme';
 import { SnackbarProvider } from '@/shared/ui';
 
+initMonitoring();
 SplashScreen.preventAutoHideAsync();
+
+const timeDatabaseOpen = (run) => traced('Open database', 'db.init', run);
 
 const MODAL = { presentation: 'modal' };
 const FULL_SCREEN = { presentation: 'fullScreenModal', animation: 'fade' };
@@ -85,8 +89,13 @@ function AppStack() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(fontAssets);
+  const navigation = useNavigationContainerRef();
+
+  useEffect(() => {
+    if (navigation) navigationIntegration.registerNavigationContainer(navigation);
+  }, [navigation]);
 
   if (!fontsLoaded && !fontError) return null;
 
@@ -94,7 +103,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <DatabaseProvider>
+          <DatabaseProvider around={timeDatabaseOpen}>
             <SettingsProvider>
               <SyncProvider>
                 <AppStack />
@@ -106,3 +115,5 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+export default wrapRoot(RootLayout);

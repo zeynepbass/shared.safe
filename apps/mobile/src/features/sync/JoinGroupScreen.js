@@ -13,6 +13,7 @@ import {
   useDb,
   useDbQuery,
 } from '@/shared/db';
+import { reportError } from '@/shared/monitoring';
 import { useThemedStyles } from '@/shared/theme';
 import {
   AppText,
@@ -64,7 +65,7 @@ export default function JoinGroupScreen() {
       if (e.code === 'invalidInvite') setError(t('join.invalid'));
       else if (e.code === 'inviteExpired') setError(t('join.expiredBody'));
       else {
-        console.error(e);
+        reportError(e);
         Alert.alert(t('common.error'));
       }
     }
@@ -77,7 +78,7 @@ export default function JoinGroupScreen() {
       router.dismiss();
       router.push(`/groups/${groupId}`);
     } catch (e) {
-      console.error(e);
+      reportError(e);
       Alert.alert(t('common.error'));
     }
   };

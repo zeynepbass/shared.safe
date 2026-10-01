@@ -9,6 +9,7 @@ import { useSettings } from '@/features/settings/SettingsProvider';
 import { saveProfile, useDb } from '@/shared/db';
 import { deleteImage, pickImage } from '@/shared/lib/images';
 import { CURRENCIES, CURRENCY_CODES } from '@ortak-kasa/core/money';
+import { reportError } from '@/shared/monitoring';
 import { useTheme, useThemedStyles } from '@/shared/theme';
 import {
   AppText,
@@ -85,7 +86,7 @@ export default function ProfileScreen({ mode = 'create' }) {
       if (result.status === 'denied') Alert.alert(t('profile.photoPermission'));
       if (result.status === 'ok') replacePhoto(result.uri);
     } catch (error) {
-      console.error(error);
+      reportError(error);
       Alert.alert(t('common.error'));
     }
   };
@@ -99,7 +100,7 @@ export default function ProfileScreen({ mode = 'create' }) {
     try {
       saveProfile(db, values);
     } catch (error) {
-      console.error(error);
+      reportError(error);
       Alert.alert(t('common.error'));
       return;
     }
@@ -127,6 +128,7 @@ export default function ProfileScreen({ mode = 'create' }) {
             onPress={submit}
             loading={isSubmitting}
             disabled={isSubmitted && Object.keys(errors).length > 0}
+            testID="profile-submit"
           />
         </BottomBar>
       }
@@ -176,6 +178,7 @@ export default function ProfileScreen({ mode = 'create' }) {
               returnKeyType="done"
               maxLength={NAME_MAX}
               size="lg"
+              testID="profile-name"
             />
           )}
         />

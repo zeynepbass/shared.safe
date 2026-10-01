@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
-import { useTheme, useThemedStyles } from '@/shared/theme';
+import { touchSlop, useTheme, useThemedStyles } from '@/shared/theme';
 
 import { AppText } from './AppText';
 import { CornerMarks } from './CornerMarks';
@@ -27,6 +27,7 @@ export function Button({
   style,
   accessibilityLabel,
   accessibilityHint,
+  testID,
 }) {
   const theme = useTheme();
   const styles = useThemedStyles(createStyles);
@@ -45,10 +46,16 @@ export function Button({
       accessibilityLabel={accessibilityLabel ?? title}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: inactive, busy: loading }}
-      hitSlop={isGhost ? theme.layout.hitSlop : undefined}
+      testID={testID}
+      hitSlop={
+        isGhost
+          ? theme.layout.hitSlop
+          : touchSlop(theme.layout.touchTarget, theme.controlHeight[size])
+      }
       style={({ pressed }) => [
         styles.base,
-        !isGhost && { height: theme.controlHeight[size] },
+        // A minimum, so the label is not cut off at the largest system text sizes.
+        !isGhost && { minHeight: theme.controlHeight[size] },
         size === 'sm' && styles.small,
         styles[variant],
         inactive && (variant === 'primary' ? styles.primaryDisabled : styles.disabled),

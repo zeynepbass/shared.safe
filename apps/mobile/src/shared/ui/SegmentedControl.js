@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { useThemedStyles } from '@/shared/theme';
+import { touchSlop, useTheme, useThemedStyles } from '@/shared/theme';
 
 import { AppText } from './AppText';
 
@@ -13,7 +13,9 @@ export function SegmentedControl({
   style,
   accessibilityLabel,
 }) {
+  const { layout } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const height = size === 'sm' ? layout.segmentHeightSm : layout.segmentHeight;
   return (
     <View
       style={[styles.group, size === 'sm' && styles.groupSm, disabled && styles.disabled, style]}
@@ -31,6 +33,7 @@ export function SegmentedControl({
             accessibilityRole="radio"
             accessibilityLabel={option.accessibilityLabel ?? option.label}
             accessibilityState={{ selected, checked: selected, disabled: inactive }}
+            hitSlop={touchSlop(layout.touchTarget, height)}
             style={({ pressed }) => [
               styles.item,
               index > 0 && styles.itemDivider,
@@ -57,13 +60,13 @@ const createStyles = ({ colors, spacing, layout, borderWidth, radius, opacity })
   StyleSheet.create({
     group: {
       flexDirection: 'row',
-      height: layout.segmentHeight,
+      minHeight: layout.segmentHeight,
       borderWidth: borderWidth.hairline,
       borderColor: colors.border,
       borderRadius: radius.control,
       overflow: 'hidden',
     },
-    groupSm: { height: layout.segmentHeightSm },
+    groupSm: { minHeight: layout.segmentHeightSm },
     disabled: { opacity: opacity.disabled },
     item: {
       flex: 1,

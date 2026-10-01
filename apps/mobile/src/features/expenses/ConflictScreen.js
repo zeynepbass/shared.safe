@@ -13,6 +13,7 @@ import {
   useDbQuery,
 } from '@/shared/db';
 import { useDateFormat } from '@/shared/lib/useDateFormat';
+import { reportError } from '@/shared/monitoring';
 import { useThemedStyles } from '@/shared/theme';
 import {
   AppText,
@@ -86,7 +87,7 @@ export default function ConflictScreen() {
       snackbar.show({ message: t('conflict.resolved') });
       router.back();
     } catch (error) {
-      console.error(error);
+      reportError(error);
       Alert.alert(t('common.error'));
     }
   };

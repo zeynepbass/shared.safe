@@ -6,7 +6,7 @@ import { useTheme } from '@/shared/theme';
 
 import { Button } from './Button';
 
-export function Fab({ title, onPress, icon = Plus, accessibilityLabel }) {
+export function Fab({ title, onPress, icon = Plus, accessibilityLabel, testID }) {
   const { layout, spacing } = useTheme();
   const insets = useSafeAreaInsets();
   return (
@@ -15,6 +15,7 @@ export function Fab({ title, onPress, icon = Plus, accessibilityLabel }) {
       icon={icon}
       onPress={onPress}
       accessibilityLabel={accessibilityLabel}
+      testID={testID}
       corners
       fullWidth={false}
       style={[

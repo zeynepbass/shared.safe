@@ -127,7 +127,10 @@ function rebuildGroup(tx, groupId, doc) {
       .map((r) => [r.id, r.path]),
   );
 
-  const ofGroup = tx.select({ id: expenses.id }).from(expenses).where(eq(expenses.groupId, groupId));
+  const ofGroup = tx
+    .select({ id: expenses.id })
+    .from(expenses)
+    .where(eq(expenses.groupId, groupId));
   tx.delete(expenseShares).where(inArray(expenseShares.expenseId, ofGroup)).run();
   tx.delete(activityLog).where(eq(activityLog.groupId, groupId)).run();
   tx.delete(settlements).where(eq(settlements.groupId, groupId)).run();
@@ -144,7 +147,10 @@ function rebuildGroup(tx, groupId, doc) {
   insertAll(
     tx,
     expenses,
-    view.expenses.map((e) => ({ ...expenseRow(e, groupId), receiptPath: receipts.get(e.id) ?? null })),
+    view.expenses.map((e) => ({
+      ...expenseRow(e, groupId),
+      receiptPath: receipts.get(e.id) ?? null,
+    })),
   );
   insertAll(tx, expenseShares, view.expenses.flatMap(shareRows));
   insertAll(

@@ -48,12 +48,26 @@ export default function RecoveryPhraseScreen({ mode = 'onboarding' }) {
               checked={written}
               onChange={setWritten}
               accessibilityLabel={t('recovery.written')}
+              testID="recovery-written"
             />
-            <Pressable onPress={() => setWritten(!written)} style={styles.flex}>
+            {/* The visible label toggles the checkbox too; a screen reader gets the checkbox
+              alone, which already carries this text. */}
+            <Pressable
+              onPress={() => setWritten(!written)}
+              accessible={false}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              style={styles.flex}
+            >
               <AppText variant="body">{t('recovery.written')}</AppText>
             </Pressable>
           </View>
-          <Button title={t('recovery.toVerify')} onPress={next} disabled={!written || !revealed} />
+          <Button
+            title={t('recovery.toVerify')}
+            onPress={next}
+            disabled={!written || !revealed}
+            testID="recovery-continue"
+          />
         </BottomBar>
       }
     >

@@ -1,0 +1,21 @@
+# Answers question ${QUESTION} of the recovery check by trying its choices until one is right.
+appId: com.ortakkasa.app
+---
+- tapOn:
+    id: recovery-choice-${QUESTION}-0
+- runFlow:
+    when:
+      notVisible:
+        id: recovery-right-${QUESTION}
+    commands:
+      - tapOn:
+          id: recovery-choice-${QUESTION}-1
+- runFlow:
+    when:
+      notVisible:
+        id: recovery-right-${QUESTION}
+    commands:
+      - tapOn:
+          id: recovery-choice-${QUESTION}-2
+- assertVisible:
+    id: recovery-right-${QUESTION}

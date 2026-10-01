@@ -40,3 +40,6 @@ coverage/
 # macOS
 .DS_Store
 *.pem
+
+# Sync server data
+apps/sync-server/*.db*

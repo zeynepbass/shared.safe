@@ -1,5 +1,3 @@
-import { describe, expect, it } from 'vitest';
-
 import { parseReceipt } from '../src/receipt.js';
 
 const receipt = (...lines) => lines.join('\n');

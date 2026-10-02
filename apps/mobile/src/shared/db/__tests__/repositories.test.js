@@ -76,6 +76,7 @@ describe('migrations', () => {
       'group_docs',
       'groups',
       'members',
+      'receipt_uploads',
       'settings',
       'settlements',
       'sync_groups',

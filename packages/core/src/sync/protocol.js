@@ -10,6 +10,10 @@
 //                                               carry the new key to the remaining members
 //   { t: 'vault_get', vault, token }
 //   { t: 'vault_put', vault, token, rev, data } stored only if `rev` is the current revision
+//   { t: 'file_put', group, id, data }          a sealed file of a subscribed group (a receipt
+//                                               photo); the id is chosen by the device and the
+//                                               first file stored under it stays
+//   { t: 'file_get', group, id }
 // relay → device
 //   { t: 'welcome', v }
 //   { t: 'changes', group, items: [{ seq, data }] }   catch-up pages, then live updates
@@ -21,7 +25,9 @@
 //   { t: 'vault', vault, rev, data }    current contents (data null if never stored); also the
 //                                       answer to a vault_put whose rev was stale
 //   { t: 'vault_ok', vault, rev }
-//   { t: 'error', code, group?, vault? }
+//   { t: 'file_ok', group, id }
+//   { t: 'file', group, id, data }      data null if the relay has no such file (yet)
+//   { t: 'error', code, group?, vault?, file? }
 
 export const PROTOCOL_VERSION = 2;
 export const MAX_FRAME_BYTES = 1024 * 1024;
@@ -29,6 +35,10 @@ export const MAX_PUSH_BYTES = 512 * 1024;
 export const PAGE_SIZE = 200;
 export const MAX_ENVELOPES = 256;
 export const MAX_VAULT_BYTES = 256 * 1024;
+// A file travels in one frame. This is the limit on its base64 form; MAX_FILE_PLAIN_BYTES is
+// what a device may seal so that the result fits.
+export const MAX_FILE_BYTES = 900 * 1024;
+export const MAX_FILE_PLAIN_BYTES = 640 * 1024;
 
 export class ProtocolError extends Error {
   constructor(code) {
@@ -65,6 +75,9 @@ const CLIENT_MESSAGES = {
     isSeq(m.rev) &&
     isData(m.data) &&
     m.data.length <= MAX_VAULT_BYTES,
+  file_put: (m) =>
+    isGroup(m.group) && isGroup(m.id) && isData(m.data) && m.data.length <= MAX_FILE_BYTES,
+  file_get: (m) => isGroup(m.group) && isGroup(m.id),
 };
 
 const SERVER_MESSAGES = {
@@ -79,6 +92,8 @@ const SERVER_MESSAGES = {
   rekeyed: (m) => isGroup(m.group) && isEnvelopes(m.envelopes),
   vault: (m) => isGroup(m.vault) && isSeq(m.rev) && (m.data === null || isData(m.data)),
   vault_ok: (m) => isGroup(m.vault) && isSeq(m.rev),
+  file_ok: (m) => isGroup(m.group) && isGroup(m.id),
+  file: (m) => isGroup(m.group) && isGroup(m.id) && (m.data === null || isData(m.data)),
   error: (m) => typeof m.code === 'string',
 };
 

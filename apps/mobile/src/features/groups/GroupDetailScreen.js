@@ -214,7 +214,7 @@ export default function GroupDetailScreen() {
           titleAccessory={
             expense.hasConflict ? (
               <Icon icon={GitMerge} size={14} color="danger" />
-            ) : expense.receiptPath ? (
+            ) : expense.receiptId || expense.receiptPath ? (
               <Icon icon={Paperclip} size={14} color="textMuted" />
             ) : null
           }

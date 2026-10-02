@@ -96,6 +96,9 @@ export const expenses = sqliteTable(
       .references(() => members.id),
     spentOn: text('spent_on').notNull(),
     note: text('note'),
+    // The receipt photo: its id in the group (the sealed file on the relay) and where this
+    // device keeps its own copy, if it has one. Only the id is part of the group's document.
+    receiptId: text('receipt_id'),
     receiptPath: text('receipt_path'),
     // Derived from the group document: another device edited this expense at the same time.
     hasConflict: integer('has_conflict', { mode: 'boolean' }).notNull().default(false),
@@ -220,6 +223,15 @@ export const syncGroups = sqliteTable('sync_groups', {
   joinedAt: integer('joined_at').notNull(),
   rekeyPending: integer('rekey_pending', { mode: 'boolean' }).notNull().default(false),
   removedAt: integer('removed_at'),
+});
+
+// Receipt photos the relay does not have yet. The file stays where the expense's receiptPath
+// points; it is sealed when it is sent.
+export const receiptUploads = sqliteTable('receipt_uploads', {
+  receiptId: text('receipt_id').primaryKey().notNull(),
+  groupId: text('group_id').notNull(),
+  path: text('path').notNull(),
+  createdAt: integer('created_at').notNull(),
 });
 
 // Local changes the relay has not confirmed yet, in the order they were made. `sealed` is the

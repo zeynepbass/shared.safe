@@ -58,6 +58,35 @@ describe('group envelopes', () => {
   });
 });
 
+describe('group files', () => {
+  const groupId = randomUUID();
+  const fileId = randomUUID();
+  const photo = sodium.randombytes_buf(4096);
+
+  it('round-trip and stay readable after a rotation', () => {
+    const keys = [crypto.newGroupKey()];
+    const sealed = crypto.sealFile(groupId, fileId, keys, photo);
+    expect(envelopeEpoch(sealed)).toBe(1);
+    keys.push(crypto.newGroupKey());
+    expect(crypto.openFile(groupId, fileId, keys, sealed)).toEqual(photo);
+    expect(envelopeEpoch(crypto.sealFile(groupId, fileId, keys, photo))).toBe(2);
+  });
+
+  it('open only as the file and in the group they were sealed for', () => {
+    const keys = [crypto.newGroupKey()];
+    const sealed = crypto.sealFile(groupId, fileId, keys, photo);
+    const corrupt = expect.objectContaining({ code: 'corrupt' });
+    expect(() => crypto.openFile(groupId, randomUUID(), keys, sealed)).toThrow(corrupt);
+    expect(() => crypto.openFile(randomUUID(), fileId, keys, sealed)).toThrow(corrupt);
+    expect(() => crypto.openFile(groupId, fileId, [crypto.newGroupKey()], sealed)).toThrow(corrupt);
+    // Nor as a change: a file cannot be replayed into the group's log.
+    expect(() => crypto.openChange(groupId, keys, sealed)).toThrow(corrupt);
+    expect(() => crypto.sealFile(groupId, fileId, [], photo)).toThrow(
+      expect.objectContaining({ code: 'noKey' }),
+    );
+  });
+});
+
 describe('keyrings', () => {
   it('encode compactly and decode to the same keys', () => {
     const keys = [crypto.newGroupKey(), crypto.newGroupKey()];

@@ -178,18 +178,6 @@ describe('conflicts', () => {
 });
 
 describe('local data kept out of sync', () => {
-  it('keeps receipt photos on the phone that took them', () => {
-    const { relay, zeynep, ali, groupId, ids } = twoPhones();
-    const id = createExpense(zeynep, input(groupId, ids[0], ids, { receiptPath: 'file:///r.jpg' }));
-    relay.sync(zeynep);
-    relay.sync(ali);
-    createExpense(ali, input(groupId, ids[1], ids));
-    relay.sync(ali);
-    relay.sync(zeynep);
-    expect(getExpense(zeynep, id).receiptPath).toBe('file:///r.jpg');
-    expect(getExpense(ali, id).receiptPath).toBeNull();
-  });
-
   it('renames "me" in every group when the profile changes', () => {
     const { relay, zeynep, ali, groupId } = twoPhones();
     saveProfile(ali, { name: 'Ali Veli', avatarColor: '#999', avatarPath: 'file:///me.jpg' });

@@ -81,6 +81,8 @@ const expenseRow = (e, groupId) => ({
   payerId: e.payerId,
   spentOn: e.spentOn,
   note: e.note,
+  // Expenses written before receipts were synced have no such field.
+  receiptId: e.receiptId ?? null,
   hasConflict: e.hasConflict,
   createdAt: e.createdAt,
   updatedAt: e.updatedAt,
@@ -118,14 +120,19 @@ function rebuildGroup(tx, groupId, doc) {
   if (!view) return;
 
   const local = localUser(tx, groupId);
-  const receipts = new Map(
+  // This device's copies of the receipt photos, each for the receipt it was a copy of.
+  const copies = new Map(
     tx
-      .select({ id: expenses.id, path: expenses.receiptPath })
+      .select({ id: expenses.id, receiptId: expenses.receiptId, path: expenses.receiptPath })
       .from(expenses)
       .where(and(eq(expenses.groupId, groupId), isNotNull(expenses.receiptPath)))
       .all()
-      .map((r) => [r.id, r.path]),
+      .map((r) => [r.id, r]),
   );
+  const copyOf = (row) => {
+    const copy = copies.get(row.id);
+    return copy && copy.receiptId === row.receiptId ? copy.path : null;
+  };
 
   const ofGroup = tx
     .select({ id: expenses.id })
@@ -147,10 +154,10 @@ function rebuildGroup(tx, groupId, doc) {
   insertAll(
     tx,
     expenses,
-    view.expenses.map((e) => ({
-      ...expenseRow(e, groupId),
-      receiptPath: receipts.get(e.id) ?? null,
-    })),
+    view.expenses.map((e) => {
+      const row = expenseRow(e, groupId);
+      return { ...row, receiptPath: copyOf(row) };
+    }),
   );
   insertAll(tx, expenseShares, view.expenses.flatMap(shareRows));
   insertAll(
@@ -184,8 +191,17 @@ function projectTouched(tx, groupId, doc, touched) {
   for (const id of touched.expenses) {
     const expense = readRecord(doc, 'expenses', id);
     if (!expense) continue;
-    // The receipt path is not part of the row written here, so an existing one stays.
-    upsert(tx, expenses, expenseRow(expense, groupId));
+    // The path of this device's copy of the receipt is not part of the row written here, so it
+    // stays, unless the expense now has another receipt (or none): then the copy is of a photo
+    // the expense no longer has.
+    const row = expenseRow(expense, groupId);
+    const previous = tx
+      .select({ receiptId: expenses.receiptId })
+      .from(expenses)
+      .where(eq(expenses.id, id))
+      .get();
+    const replaced = previous && previous.receiptId !== row.receiptId;
+    upsert(tx, expenses, replaced ? { ...row, receiptPath: null } : row);
     tx.delete(expenseShares).where(eq(expenseShares.expenseId, id)).run();
     insertAll(tx, expenseShares, shareRows(expense));
   }

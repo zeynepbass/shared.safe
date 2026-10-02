@@ -6,3 +6,4 @@ ios
 android
 **/src/shared/db/migrations/
 coverage
+**/test/fixtures/

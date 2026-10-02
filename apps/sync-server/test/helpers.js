@@ -52,6 +52,7 @@ export class Device {
   docs = new Map();
   meta = new Map();
   pending = [];
+  files = [];
   errors = [];
   rekeyDue = new Set();
 
@@ -126,6 +127,22 @@ export class Device {
     return true;
   }
 
+  fileOutbox(groupId) {
+    const { keys } = this.meta.get(groupId);
+    return this.files
+      .filter((f) => f.groupId === groupId)
+      .map((f) => ({ id: f.id, data: crypto.sealFile(groupId, f.id, keys, f.bytes) }));
+  }
+
+  fileStored(groupId, id) {
+    this.files = this.files.filter((f) => f.groupId !== groupId || f.id !== id);
+  }
+
+  fileRejected(groupId, id, code) {
+    this.errors.push(new Error(`file ${code}`));
+    this.fileStored(groupId, id);
+  }
+
   adopt(groupId, key) {
     const meta = this.meta.get(groupId);
     meta.keys = [...meta.keys, key];
@@ -147,6 +164,18 @@ export class Device {
   // Once the group has arrived, records this device's identity on its member.
   claim(groupId, memberId, ctx) {
     return this.edit(groupId, (doc) => setMemberKey(doc, memberId, this.publicKey, ctx));
+  }
+
+  // A receipt photo waiting to be sent, as the app queues it next to the expense.
+  attach(groupId, id, bytes) {
+    this.files.push({ groupId, id, bytes });
+    this.client.kick();
+  }
+
+  // Fetches and opens a file another device attached; null while the relay does not have it.
+  async fetchFile(groupId, id) {
+    const sealed = await this.client.fetchFile(groupId, id);
+    return sealed && crypto.openFile(groupId, id, this.meta.get(groupId).keys, sealed);
   }
 
   keysOf(groupId) {

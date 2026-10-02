@@ -1,0 +1,21 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.ortakkasa'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.receiptocr"
+  defaultConfig {
+    versionCode 1
+    versionName '1.0.0'
+  }
+}
+
+dependencies {
+  // The Latin-script recogniser with its model bundled in the app: it works without Google Play
+  // services and without a download on first use.
+  implementation 'com.google.mlkit:text-recognition:16.0.1'
+}

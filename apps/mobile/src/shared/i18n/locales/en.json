@@ -226,7 +226,15 @@
     "choosePayer": "Who paid?",
     "amountLabel": "Amount",
     "saved": "Expense saved",
-    "updated": "Expense updated"
+    "updated": "Expense updated",
+    "receiptScan": "Scan receipt",
+    "receiptRead": "Read from the receipt: {{fields}}. Remember to check.",
+    "receiptUnread": "Receipt attached, but it could not be read. Enter the details yourself.",
+    "receiptFields": {
+      "total": "amount",
+      "date": "date",
+      "merchant": "shop"
+    }
   },
   "splitTypes": {
     "equal": "Equal",
@@ -249,10 +257,13 @@
     "payer": "Paid by",
     "date": "Date",
     "receipt": "Receipt image",
-    "receiptCaption": "Receipt · stored on device",
+    "receiptCaption": "Receipt · sent to the group end-to-end encrypted",
     "split": "Split",
     "deleted": "Expense deleted",
-    "notFound": "This expense no longer exists."
+    "notFound": "This expense no longer exists.",
+    "receiptLoading": "Downloading the receipt…",
+    "receiptUnavailable": "The receipt could not be downloaded yet. Try again once the phone that added it has been online, or when you are connected.",
+    "receiptRetry": "Try again"
   },
   "balances": {
     "header": "Balances",
@@ -493,5 +504,15 @@
     "inUseTitle": "This member can't be removed",
     "inUseBody": "This member has expenses or payments. Delete them or move them to someone else first.",
     "keyNote": "Removing someone replaces the group's encryption key, so they can't see later changes."
+  },
+  "receiptScan": {
+    "header": "Scan receipt",
+    "hint": "Fit the whole receipt in the picture",
+    "detected": "Receipt found, you can take the photo",
+    "capture": "Take photo",
+    "reading": "Reading the receipt…",
+    "failed": "The photo could not be taken. Try again.",
+    "permissionBody": "Allow camera access to scan the receipt, or pick it from your library.",
+    "noCameraBody": "This device has no camera to use. You can pick the receipt from your library."
   }
 }

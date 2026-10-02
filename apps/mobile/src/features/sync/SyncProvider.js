@@ -7,7 +7,9 @@ import {
   createSyncStore,
   getSetting,
   pendingChangesByGroup,
+  receiptToFetch,
   removedGroupIds,
+  saveFetchedReceipt,
   setSetting,
   SETTING_KEYS,
   useDb,
@@ -52,7 +54,11 @@ export function SyncProvider({ children }) {
     // Local edits land in the outbox, new groups and keys in sync_groups and backup bookkeeping
     // in settings: send them right away.
     const offChanges = subscribe((changed) => {
-      if (['sync_outbox', 'sync_groups', 'settings'].some((table) => changed.has(table))) {
+      if (
+        ['sync_outbox', 'sync_groups', 'settings', 'receipt_uploads'].some((table) =>
+          changed.has(table),
+        )
+      ) {
         client.kick();
       }
     });
@@ -92,8 +98,20 @@ export function SyncProvider({ children }) {
         clientRef.current
           ? clientRef.current.fetchVault(access)
           : Promise.reject(new Error('offline')),
+      // Fetches the receipt photo of an expense another device added and keeps a copy here.
+      // Resolves with 'saved', 'none' (nothing to fetch) or 'missing' (the relay does not have
+      // it yet: the phone that took it has not been online since); rejects while offline.
+      async fetchReceipt(expenseId) {
+        const target = receiptToFetch(db, expenseId);
+        if (!target) return 'none';
+        if (!clientRef.current) throw new Error('offline');
+        const sealed = await clientRef.current.fetchFile(target.groupId, target.receiptId);
+        if (!sealed) return 'missing';
+        saveFetchedReceipt(db, expenseId, target, sealed);
+        return 'saved';
+      },
     };
-  }, [online, status, pendingByGroup, removed]);
+  }, [db, online, status, pendingByGroup, removed]);
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
 }

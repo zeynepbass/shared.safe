@@ -28,7 +28,7 @@ kadar borçlu ve hesabı en az kaç ödemeyle kapatırsınız.
 
 ## Ekran görüntüleri
 
-Görseller `screenshots/` altına aşağıdaki adlarla eklenecek.
+Görseller tasarım dosyalarından alınmıştır; cihazdan çekilmiş ekran görüntüleri değildir.
 
 | Gruplar                             | Grup detayı                                | Harcama ekle                                  |
 | ----------------------------------- | ------------------------------------------ | --------------------------------------------- |
@@ -38,9 +38,9 @@ Görseller `screenshots/` altına aşağıdaki adlarla eklenecek.
 | --------------------------------------- | ---------------------------------- | --------------------------------------------- |
 | ![Bakiyeler](screenshots/bakiyeler.png) | ![Davet](screenshots/davet-qr.png) | ![Kurtarma ifadesi](screenshots/kurtarma.png) |
 
-| Koyu tema                                     | Çakışma çözümü                      | Ayarlar                             |
+| Koyu tema                                     | Bölüşüm ayarı                       | Ayarlar                             |
 | --------------------------------------------- | ----------------------------------- | ----------------------------------- |
-| ![Koyu tema](screenshots/koyu-grup-detay.png) | ![Çakışma](screenshots/cakisma.png) | ![Ayarlar](screenshots/ayarlar.png) |
+| ![Koyu tema](screenshots/koyu-grup-detay.png) | ![Bölüşüm](screenshots/bolusum.png) | ![Ayarlar](screenshots/ayarlar.png) |
 
 ## Mimari
 

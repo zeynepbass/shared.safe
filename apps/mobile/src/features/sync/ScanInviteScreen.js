@@ -12,6 +12,10 @@ import { useThemedStyles } from '@/shared/theme';
 import { AppText, Button, EmptyState, IconButton } from '@/shared/ui';
 
 const FRAME = 240;
+// Text and marks over the camera picture: white on a dark scrim, whatever the theme and
+// whatever the camera is pointed at.
+const CAMERA_INK = '#FFFFFF';
+const CAMERA_SCRIM = 'rgba(0, 0, 0, 0.6)';
 
 function useAppActive() {
   const [active, setActive] = useState(AppState.currentState === 'active');
@@ -100,11 +104,11 @@ export default function ScanInviteScreen() {
         <View style={styles.header}>
           <IconButton
             icon={X}
-            color="textOnInverse"
+            color={CAMERA_INK}
             onPress={() => router.back()}
             accessibilityLabel={t('common.close')}
           />
-          <AppText variant="headerTitle" color="textOnInverse">
+          <AppText variant="headerTitle" color={CAMERA_INK}>
             {t('scan.header')}
           </AppText>
           <View style={styles.headerSide} />
@@ -118,7 +122,7 @@ export default function ScanInviteScreen() {
           </View>
           <AppText
             variant="bodyStrong"
-            color="textOnInverse"
+            color={CAMERA_INK}
             style={styles.hint}
             accessibilityLiveRegion="polite"
           >
@@ -150,16 +154,23 @@ const createStyles = ({ colors, spacing, layout }) =>
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: layout.gutter - spacing.sm,
+      backgroundColor: CAMERA_SCRIM,
     },
     headerSide: { width: layout.iconButton },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.xl },
     frame: { width: FRAME, height: FRAME },
-    corner: { position: 'absolute', width: 28, height: 28, borderColor: colors.textOnInverse },
+    corner: { position: 'absolute', width: 28, height: 28, borderColor: CAMERA_INK },
     topLeft: { top: 0, left: 0, borderTopWidth: 2, borderLeftWidth: 2 },
     topRight: { top: 0, right: 0, borderTopWidth: 2, borderRightWidth: 2 },
     bottomLeft: { bottom: 0, left: 0, borderBottomWidth: 2, borderLeftWidth: 2 },
     bottomRight: { bottom: 0, right: 0, borderBottomWidth: 2, borderRightWidth: 2 },
-    hint: { textAlign: 'center', paddingHorizontal: layout.gutter },
+    hint: {
+      textAlign: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      marginHorizontal: layout.gutter,
+      backgroundColor: CAMERA_SCRIM,
+    },
     sheet: {
       backgroundColor: colors.bg,
       paddingHorizontal: layout.gutter,

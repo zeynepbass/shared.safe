@@ -1,7 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { GitMerge, Pencil, Trash2 } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Image, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
 
 import {
   getExpense,
@@ -12,8 +13,10 @@ import {
   useDbQuery,
 } from '@/shared/db';
 import { memberLabel } from '@/features/groups/useGroupSummary';
+import { useSync } from '@/features/sync/SyncProvider';
 import { formatAmountInput } from '@ortak-kasa/core/money';
 import { useDateFormat } from '@/shared/lib/useDateFormat';
+import { reportError } from '@/shared/monitoring';
 import { useThemedStyles } from '@/shared/theme';
 import {
   AppText,
@@ -168,21 +171,7 @@ export default function ExpenseDetailScreen() {
         />
       </View>
 
-      {expense.receiptPath ? (
-        <View style={styles.receipt}>
-          <BlueprintGrid cell={20} style={styles.receiptFrame}>
-            <Image
-              source={{ uri: expense.receiptPath }}
-              style={StyleSheet.absoluteFill}
-              resizeMode="contain"
-              accessibilityLabel={t('expenseDetail.receipt')}
-            />
-          </BlueprintGrid>
-          <AppText variant="caption" color="textMuted">
-            {t('expenseDetail.receiptCaption')}
-          </AppText>
-        </View>
-      ) : null}
+      <Receipt expense={expense} />
 
       <SectionHeader
         title={t('expenseDetail.split')}
@@ -215,6 +204,90 @@ export default function ExpenseDetailScreen() {
   );
 }
 
+// The receipt photo: this device's copy if it has one; otherwise the photo is fetched from the
+// relay (where it lies sealed) when the expense is opened, and kept from then on.
+function Receipt({ expense }) {
+  const { t } = useTranslation();
+  const styles = useThemedStyles(createStyles);
+  const { connected, fetchReceipt } = useSync();
+  // The fetch that did not bring the photo, if the last one did not: which receipt, which try.
+  const [failed, setFailed] = useState(null);
+  const [tries, setTries] = useState(0);
+  const wanted = Boolean(expense.receiptId) && !expense.receiptPath;
+
+  // Tried when the expense is opened, when the connection comes back and when asked again.
+  useEffect(() => {
+    if (!wanted || !connected) return undefined;
+    let current = true;
+    const giveUp = () => current && setFailed({ receiptId: expense.receiptId, tries });
+    fetchReceipt(expense.id).then(
+      (result) => {
+        if (result === 'missing') giveUp();
+      },
+      (error) => {
+        // Offline is the ordinary case; anything else (a file that does not open) is worth
+        // knowing about.
+        if (!['offline', 'timeout', 'closed'].includes(error?.message)) {
+          reportError(error, 'receipt-fetch');
+        }
+        giveUp();
+      },
+    );
+    return () => {
+      current = false;
+    };
+    // fetchReceipt changes with every sync status update; the fetch should not restart then.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wanted, connected, expense.id, expense.receiptId, tries]);
+
+  const unavailable =
+    !connected || (failed?.receiptId === expense.receiptId && failed.tries === tries);
+
+  if (!expense.receiptId && !expense.receiptPath) return null;
+
+  return (
+    <View style={styles.receipt}>
+      <BlueprintGrid cell={20} style={styles.receiptFrame}>
+        {expense.receiptPath ? (
+          <Image
+            source={{ uri: expense.receiptPath }}
+            style={StyleSheet.absoluteFill}
+            resizeMode="contain"
+            accessibilityLabel={t('expenseDetail.receipt')}
+          />
+        ) : unavailable ? (
+          <View style={styles.receiptStatus}>
+            <AppText variant="caption" color="textMuted" align="center">
+              {t('expenseDetail.receiptUnavailable')}
+            </AppText>
+            <Button
+              title={t('expenseDetail.receiptRetry')}
+              variant="ghost"
+              onPress={() => setTries((n) => n + 1)}
+              disabled={!connected}
+            />
+          </View>
+        ) : (
+          <View
+            style={styles.receiptStatus}
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel={t('expenseDetail.receiptLoading')}
+          >
+            <ActivityIndicator />
+            <AppText variant="caption" color="textMuted">
+              {t('expenseDetail.receiptLoading')}
+            </AppText>
+          </View>
+        )}
+      </BlueprintGrid>
+      <AppText variant="caption" color="textMuted">
+        {t('expenseDetail.receiptCaption')}
+      </AppText>
+    </View>
+  );
+}
+
 const createStyles = ({ spacing, layout }) =>
   StyleSheet.create({
     conflict: { gap: spacing.sm, paddingHorizontal: layout.gutter, paddingTop: spacing.md },
@@ -225,4 +298,11 @@ const createStyles = ({ spacing, layout }) =>
     inline: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
     receipt: { paddingHorizontal: layout.gutter, paddingTop: spacing.xl, gap: spacing.sm },
     receiptFrame: { height: 200 },
+    receiptStatus: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      paddingHorizontal: spacing.lg,
+    },
   });

@@ -1,14 +1,18 @@
 import { createSyncStore } from '../repositories/syncRepository';
 
 // Stands in for the relay, following the same rules as the real one: an append-only log per
-// group behind a token, token replacement with key envelopes for the old token, and vaults that
-// only take a write based on their latest revision. It sees exactly what the relay would.
+// group behind a token, token replacement with key envelopes for the old token, files that never
+// change once stored, and vaults that only take a write based on their latest revision. It sees
+// exactly what the relay would.
 export function createRelay() {
-  const groups = new Map(); // groupId → { token, log: [sealed], retired: Map<token, envelopes> }
+  // groupId → { token, log: [sealed], retired: Map<token, envelopes>, files: Map<id, sealed> }
+  const groups = new Map();
   const vaults = new Map(); // vaultId → { token, rev, data }
 
   function syncGroup(store, { groupId, token, cursor }) {
-    if (!groups.has(groupId)) groups.set(groupId, { token, log: [], retired: new Map() });
+    if (!groups.has(groupId)) {
+      groups.set(groupId, { token, log: [], retired: new Map(), files: new Map() });
+    }
     const group = groups.get(groupId);
     if (group.token !== token) {
       const envelopes = group.retired.get(token);
@@ -35,6 +39,10 @@ export function createRelay() {
       outbox.map((e) => e.id),
       group.log.length,
     );
+    for (const file of store.fileOutbox(groupId)) {
+      if (!group.files.has(file.id)) group.files.set(file.id, file.data);
+      store.fileStored(groupId, file.id);
+    }
   }
 
   function backUp(store) {
@@ -61,6 +69,16 @@ export function createRelay() {
       const store = createSyncStore(db);
       for (const group of store.groups()) syncGroup(store, group);
       backUp(store);
+    },
+    // What SyncClient.fetchFile gives a device subscribed to the group: the sealed file, or null
+    // while the relay does not have it.
+    fetchFile(db, groupId, id) {
+      const group = groups.get(groupId);
+      const subscribed = createSyncStore(db)
+        .groups()
+        .some((g) => g.groupId === groupId && g.token === group?.token);
+      if (!subscribed) throw new Error('offline');
+      return group.files.get(id) ?? null;
     },
     fetchVault({ vault, token }) {
       const current = vaults.get(vault);

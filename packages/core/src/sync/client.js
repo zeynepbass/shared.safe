@@ -1,5 +1,11 @@
 import { toBase64, fromBase64 } from './base64.js';
-import { encodeMessage, MAX_PUSH_BYTES, parseServerMessage, PROTOCOL_VERSION } from './protocol.js';
+import {
+  encodeMessage,
+  MAX_FILE_BYTES,
+  MAX_PUSH_BYTES,
+  parseServerMessage,
+  PROTOCOL_VERSION,
+} from './protocol.js';
 
 // Keeps a device's groups in step with the relay. It knows nothing about Automerge, encryption
 // or storage: everything goes through `store`, whose methods may be sync or async:
@@ -17,8 +23,12 @@ import { encodeMessage, MAX_PUSH_BYTES, parseServerMessage, PROTOCOL_VERSION } f
 //   vaultSaved(rev)                 the relay stored the backup that was sent
 //   vaultMerge(rev, data)           the relay is at another revision: fold in its backup
 //                                     (Uint8Array, or null if there is none)
+//   fileOutbox(groupId)             → [{ id, data: Uint8Array }] sealed files waiting to be sent
+//   fileStored(groupId, id)         the relay has that file
+//   fileRejected(groupId, id, code) it will never take it (too large)
 //
-// The key and backup methods are optional; a store without them never rotates keys or backs up.
+// The key, backup and file methods are optional; a store without them never rotates keys, backs
+// up or sends files.
 //
 // Changes made offline simply wait in the outbox; every (re)connection subscribes to each group
 // with its cursor, receives what it missed, replaces the group key if needed, then sends what it
@@ -39,6 +49,8 @@ export class SyncClient {
   #rekeying = new Map();
   #vaultInFlight = false;
   #vaultRequests = new Map();
+  #filesInFlight = new Map();
+  #fileRequests = new Map();
   #queue = Promise.resolve();
   #listeners = new Set();
   #status = INITIAL_STATUS;
@@ -127,6 +139,38 @@ export class SyncClient {
     });
   }
 
+  // Reads a file of a group this device is subscribed to (a receipt photo another device
+  // added). Resolves with the sealed bytes, or null if the relay does not have the file yet.
+  fetchFile(groupId, id) {
+    return new Promise((resolve, reject) => {
+      if (!this.#isOpen() || !this.#subscribed.has(groupId)) {
+        reject(new Error('offline'));
+        return;
+      }
+      // Two screens asking for the same file share one request.
+      const key = `${groupId}/${id}`;
+      const pending = this.#fileRequests.get(key);
+      if (pending) {
+        pending.waiters.push({ resolve, reject });
+        return;
+      }
+      const timer = setTimeout(
+        () => this.#settleFile(key, 'reject', new Error('timeout')),
+        REQUEST_TIMEOUT_MS,
+      );
+      this.#fileRequests.set(key, { timer, waiters: [{ resolve, reject }] });
+      this.#send({ t: 'file_get', group: groupId, id });
+    });
+  }
+
+  #settleFile(key, how, value) {
+    const pending = this.#fileRequests.get(key);
+    if (!pending) return;
+    this.#fileRequests.delete(key);
+    clearTimeout(pending.timer);
+    for (const waiter of pending.waiters) waiter[how](value);
+  }
+
   #isOpen() {
     return this.#socket?.readyState === 1 && this.#status.connection === 'online';
   }
@@ -162,6 +206,10 @@ export class SyncClient {
       this.#vaultInFlight = false;
       for (const request of this.#vaultRequests.values()) request.reject(new Error('closed'));
       this.#vaultRequests.clear();
+      this.#filesInFlight.clear();
+      for (const key of [...this.#fileRequests.keys()]) {
+        this.#settleFile(key, 'reject', new Error('closed'));
+      }
       if (this.#enabled && this.#networkUp) {
         this.#setStatus({ connection: 'connecting' });
         this.#scheduleReconnect();
@@ -232,6 +280,7 @@ export class SyncClient {
         this.#rekeying.delete(message.group);
         await this.store.commitRekey(message.group, prepared);
         await this.#flush(message.group);
+        await this.#flushFiles(message.group);
         break;
       }
       case 'rekeyed': {
@@ -264,8 +313,25 @@ export class SyncClient {
         await this.#flushVault();
         break;
       }
+      case 'file_ok': {
+        this.#filesInFlight.get(message.group)?.delete(message.id);
+        await this.store.fileStored?.(message.group, message.id);
+        break;
+      }
+      case 'file': {
+        this.#settleFile(
+          `${message.group}/${message.id}`,
+          'resolve',
+          message.data && fromBase64(message.data),
+        );
+        break;
+      }
       case 'error': {
-        if (message.vault) {
+        if (message.file) {
+          // Sent or asked for while the subscription was ending; the next flush tries again.
+          this.#filesInFlight.get(message.group)?.delete(message.file);
+          this.#settleFile(`${message.group}/${message.file}`, 'reject', new Error(message.code));
+        } else if (message.vault) {
           const request = this.#vaultRequests.get(message.vault);
           this.#vaultRequests.delete(message.vault);
           request?.reject(new Error(message.code));
@@ -294,6 +360,7 @@ export class SyncClient {
     this.#subscribed.delete(groupId);
     this.#inFlight.delete(groupId);
     this.#rekeying.delete(groupId);
+    this.#filesInFlight.delete(groupId);
   }
 
   #setGroupError(groupId, code) {
@@ -316,6 +383,7 @@ export class SyncClient {
       return;
     }
     await this.#flush(groupId);
+    await this.#flushFiles(groupId);
   }
 
   async #flushVault() {
@@ -360,5 +428,23 @@ export class SyncClient {
       inFlight.add(entry.id);
     }
     sendBatch();
+  }
+
+  // Sends the files waiting for this group, one frame each.
+  async #flushFiles(groupId) {
+    const files = (await this.store.fileOutbox?.(groupId)) ?? [];
+    if (files.length === 0 || !this.#subscribed.has(groupId)) return;
+    const inFlight = this.#filesInFlight.get(groupId) ?? new Set();
+    this.#filesInFlight.set(groupId, inFlight);
+    for (const file of files) {
+      if (inFlight.has(file.id)) continue;
+      const data = toBase64(file.data);
+      if (data.length > MAX_FILE_BYTES) {
+        await this.store.fileRejected?.(groupId, file.id, 'tooLarge');
+        continue;
+      }
+      inFlight.add(file.id);
+      this.#send({ t: 'file_put', group: groupId, id: file.id, data });
+    }
   }
 }

@@ -13,8 +13,8 @@ import { openStore } from './store.js';
 const HEARTBEAT_MS = 30_000;
 
 // A relay, nothing more: it checks a group's access token, stores the blobs devices push and
-// forwards them to the other devices on that group, and keeps each user's vault. It never
-// decodes a blob; everything is end-to-end encrypted on the devices.
+// forwards them to the other devices on that group, keeps the group's files and each user's
+// vault. It never decodes a blob; everything is end-to-end encrypted on the devices.
 export function createSyncServer({ port = 0, dbPath = ':memory:', log = () => {} } = {}) {
   const store = openStore(dbPath);
   const wss = new WebSocketServer({ port, maxPayload: MAX_FRAME_BYTES });
@@ -119,7 +119,34 @@ export function createSyncServer({ port = 0, dbPath = ':memory:', log = () => {}
     } else send(socket, { t: 'vault_ok', vault, rev: result.rev });
   }
 
-  const HANDLERS = { sub: subscribe, push, rekey, vault_get: vaultGet, vault_put: vaultPut };
+  // Files belong to a group and are open to whoever is subscribed to it, like its log.
+  function filePut(socket, { group, id, data }) {
+    if (!socket.groups.has(group)) {
+      send(socket, { t: 'error', code: 'notSubscribed', group, file: id });
+      return;
+    }
+    store.putFile(group, id, Buffer.from(fromBase64(data)));
+    send(socket, { t: 'file_ok', group, id });
+  }
+
+  function fileGet(socket, { group, id }) {
+    if (!socket.groups.has(group)) {
+      send(socket, { t: 'error', code: 'notSubscribed', group, file: id });
+      return;
+    }
+    const data = store.getFile(group, id);
+    send(socket, { t: 'file', group, id, data: data && toBase64(data) });
+  }
+
+  const HANDLERS = {
+    sub: subscribe,
+    push,
+    rekey,
+    vault_get: vaultGet,
+    vault_put: vaultPut,
+    file_put: filePut,
+    file_get: fileGet,
+  };
 
   wss.on('connection', (socket) => {
     socket.groups = new Set();

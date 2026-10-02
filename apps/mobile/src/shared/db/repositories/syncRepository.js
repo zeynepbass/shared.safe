@@ -27,10 +27,12 @@ import {
 } from '../sync/groupDocs';
 import { encodeInvite, parseInvite } from '../sync/invite';
 import { projectGroup } from '../sync/projection';
+import { createReceiptStore } from '../sync/receiptSync';
 import { createVaultStore, markVaultChanged, readBackup, restoreGroups } from '../sync/vault';
 import { getLocalUser, saveProfile } from './userRepository';
 
 export { getSyncGroup };
+export { countPendingReceipts, receiptToFetch, saveFetchedReceipt } from '../sync/receiptSync';
 
 export function createInvite(db, groupId) {
   const keys = groupKeys(db, groupId);
@@ -319,5 +321,6 @@ export function createSyncStore(db) {
     },
 
     ...createVaultStore(db),
+    ...createReceiptStore(db),
   };
 }

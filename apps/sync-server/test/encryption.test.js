@@ -168,3 +168,66 @@ describe('end-to-end encryption', () => {
     await waitFor(() => hasExpense(phone, 'Settled'));
   });
 });
+
+describe('receipt photos', () => {
+  // Stands in for a JPEG: recognisable bytes the relay must never be able to read.
+  const photo = new TextEncoder().encode(`JFIF receipt of the market ${'x'.repeat(2000)}`);
+
+  it('reach the other members sealed, and only them', async () => {
+    const { phone, tablet } = devices;
+    const receiptId = randomUUID();
+    phone.edit(groupId, (doc) => putExpense(doc, { ...expense('Market'), receiptId }, ctx(AYSE)));
+    phone.attach(groupId, receiptId, photo);
+    await waitFor(() => phone.files.length === 0);
+
+    await waitFor(() => hasExpense(tablet, 'Market'));
+    const seen = tablet.view(groupId).expenses.find((e) => e.description === 'Market');
+    expect(seen.receiptId).toBe(receiptId);
+    expect(await tablet.fetchFile(groupId, receiptId)).toEqual(photo);
+
+    // What the relay holds, read with relay access alone.
+    const spy = await rawClient(server.port);
+    spy.send({ t: 'sub', group: groupId, token: phone.groups()[0].token, since: 0 });
+    await spy.next((m) => m.t === 'sub_ok');
+    spy.send({ t: 'file_get', group: groupId, id: receiptId });
+    const stored = Buffer.from(fromBase64((await spy.next((m) => m.t === 'file')).data));
+    expect(stored.length).toBeGreaterThan(photo.length);
+    expect(stored.toString('latin1')).not.toContain('JFIF');
+    expect(stored.toString('latin1')).not.toContain('receipt of the market');
+  });
+
+  it('wait for the connection when attached offline', async () => {
+    const { phone, tablet } = devices;
+    const receiptId = randomUUID();
+    phone.goOffline();
+    await waitFor(() => phone.client.status.connection === 'offline');
+    phone.edit(groupId, (doc) => putExpense(doc, { ...expense('Offline'), receiptId }, ctx(AYSE)));
+    phone.attach(groupId, receiptId, photo);
+    // Nobody has it yet: the relay answers that there is no such file.
+    expect(await tablet.fetchFile(groupId, receiptId)).toBeNull();
+
+    await phone.goOnline();
+    await waitFor(() => phone.files.length === 0);
+    expect(await tablet.fetchFile(groupId, receiptId)).toEqual(photo);
+  });
+
+  it('stay readable after the key is replaced, but not for the removed member', async () => {
+    const { phone, tablet, laptop } = devices;
+    const before = randomUUID();
+    phone.attach(groupId, before, photo);
+    await waitFor(() => phone.files.length === 0);
+
+    phone.removeMember(groupId, (doc) => removeMember(doc, CEM, ctx(AYSE)));
+    await waitFor(() => tablet.keysOf(groupId).length === 2);
+    const after = randomUUID();
+    phone.attach(groupId, after, photo);
+    await waitFor(() => phone.files.length === 0);
+
+    // Sealed with the first key, sealed with the second: both open with the keyring.
+    expect(await tablet.fetchFile(groupId, before)).toEqual(photo);
+    expect(await tablet.fetchFile(groupId, after)).toEqual(photo);
+    // The removed member is no longer subscribed, so the relay gives them nothing.
+    await waitFor(() => laptop.groups().length === 0);
+    await expect(laptop.fetchFile(groupId, after)).rejects.toThrow('offline');
+  });
+});

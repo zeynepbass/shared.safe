@@ -252,6 +252,8 @@ export function putExpense(doc, input, ctx) {
     payerId: input.payerId,
     spentOn: input.spentOn,
     note: input.note ?? null,
+    // The id of the receipt photo, a sealed file kept on the relay next to the group's log.
+    receiptId: input.receiptId ?? null,
     splitType: input.splitType,
     shares: shares.map(({ memberId, amount, weight }) => ({ memberId, amount, weight })),
     createdAt: current?.createdAt ?? ctx.now,

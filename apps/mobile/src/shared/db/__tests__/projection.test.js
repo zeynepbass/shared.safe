@@ -25,6 +25,7 @@ import {
 import { activityLog, expenses, expenseShares, groups, members, settlements } from '../schema';
 import { loadGroupDoc } from '../sync/groupDocs';
 import { projectGroup } from '../sync/projection';
+import { receiptFilesOf } from '../sync/receiptFiles';
 import { createRelay } from '../testing/createRelay';
 import { createTestDb } from '../testing/createTestDb';
 
@@ -200,12 +201,36 @@ describe('projecting only what changed', () => {
 
   it('keeps a receipt through changes to its expense and to others', () => {
     const { zeynep, ali, groupId, ids, syncAll } = twoPhones();
-    const id = createExpense(zeynep, input(groupId, ids[0], ids, { receiptPath: 'file:///r.jpg' }));
+    const receiptPath = receiptFilesOf(zeynep).write('r', new Uint8Array([1, 2, 3]));
+    const id = createExpense(zeynep, input(groupId, ids[0], ids, { receiptPath }));
     syncAll();
+    const { receiptId } = getExpense(zeynep, id);
     updateExpense(ali, id, input(groupId, ids[0], ids, { amount: 100 }));
     createExpense(ali, input(groupId, ids[1], ids));
     syncAll();
-    expect(getExpense(zeynep, id)).toMatchObject({ amount: 100, receiptPath: 'file:///r.jpg' });
-    expect(getExpense(ali, id).receiptPath).toBeNull();
+    expect(getExpense(zeynep, id)).toMatchObject({ amount: 100, receiptId, receiptPath });
+    expect(getExpense(ali, id)).toMatchObject({ receiptId, receiptPath: null });
+  });
+
+  it('drops the copy of a receipt the expense no longer has', () => {
+    const { zeynep, ali, groupId, ids, syncAll } = twoPhones();
+    const first = receiptFilesOf(zeynep).write('first', new Uint8Array([1]));
+    const id = createExpense(zeynep, input(groupId, ids[0], ids, { receiptPath: first }));
+    syncAll();
+    const second = receiptFilesOf(ali).write('second', new Uint8Array([2]));
+    updateExpense(ali, id, input(groupId, ids[0], ids, { receiptPath: second }));
+    syncAll();
+    // Zeynep's file was of the first photo; the expense now has Ali's.
+    expect(getExpense(zeynep, id)).toMatchObject({
+      receiptId: getExpense(ali, id).receiptId,
+      receiptPath: null,
+    });
+    expect(getExpense(ali, id).receiptPath).toBe(second);
+
+    updateExpense(zeynep, id, input(groupId, ids[0], ids, { receiptPath: null }));
+    syncAll();
+    for (const db of [zeynep, ali]) {
+      expect(getExpense(db, id)).toMatchObject({ receiptId: null, receiptPath: null });
+    }
   });
 });

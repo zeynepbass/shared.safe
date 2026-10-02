@@ -226,7 +226,15 @@
     "choosePayer": "Kim ödedi?",
     "amountLabel": "Tutar",
     "saved": "Harcama kaydedildi",
-    "updated": "Harcama güncellendi"
+    "updated": "Harcama güncellendi",
+    "receiptScan": "Fişi tara",
+    "receiptRead": "Fişten okundu: {{fields}}. Kontrol etmeyi unutma.",
+    "receiptUnread": "Fiş eklendi ama okunamadı. Bilgileri elle gir.",
+    "receiptFields": {
+      "total": "tutar",
+      "date": "tarih",
+      "merchant": "mağaza"
+    }
   },
   "splitTypes": {
     "equal": "Eşit",
@@ -249,10 +257,13 @@
     "payer": "Ödeyen",
     "date": "Tarih",
     "receipt": "Fiş görseli",
-    "receiptCaption": "Fiş · cihazda saklanır",
+    "receiptCaption": "Fiş · gruba uçtan uca şifreli gönderilir",
     "split": "Bölüşüm",
     "deleted": "Harcama silindi",
-    "notFound": "Bu harcama artık yok."
+    "notFound": "Bu harcama artık yok.",
+    "receiptLoading": "Fiş indiriliyor…",
+    "receiptUnavailable": "Fiş henüz indirilemedi. Ekleyen kişinin cihazı çevrimiçi olunca ya da bağlantın gelince tekrar dene.",
+    "receiptRetry": "Tekrar dene"
   },
   "balances": {
     "header": "Bakiyeler",
@@ -491,5 +502,15 @@
     "inUseTitle": "Bu üye çıkarılamaz",
     "inUseBody": "Bu üyenin harcamaları ya da ödemeleri var. Önce onları sil veya başka birine aktar.",
     "keyNote": "Birini çıkardığında grubun şifreleme anahtarı yenilenir; çıkarılan kişi sonraki değişiklikleri göremez."
+  },
+  "receiptScan": {
+    "header": "Fişi tara",
+    "hint": "Fişin tamamını kadraja al",
+    "detected": "Fiş algılandı, fotoğrafı çekebilirsin",
+    "capture": "Fotoğraf çek",
+    "reading": "Fiş okunuyor…",
+    "failed": "Fotoğraf çekilemedi. Tekrar dene.",
+    "permissionBody": "Fişi okutmak için kameraya erişim ver ya da fişi galeriden seç.",
+    "noCameraBody": "Bu cihazda kullanılabilir bir kamera yok. Fişi galeriden seçebilirsin."
   }
 }

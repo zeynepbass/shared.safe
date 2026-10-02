@@ -31,6 +31,11 @@ export function clearDraft() {
   emit();
 }
 
+// For code outside React (the receipt scanner fills the form from where it stands).
+export function getDraft() {
+  return draft;
+}
+
 export function useDraft() {
   return useSyncExternalStore(subscribe, () => draft);
 }

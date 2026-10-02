@@ -3,8 +3,8 @@ import { and, desc, eq, getTableColumns, inArray, isNull } from 'drizzle-orm';
 import * as groupDoc from '@ortak-kasa/core/groupDoc';
 
 import { DbValidationError } from '../errors';
-import { newId } from '../ids';
-import { expenses, expenseShares } from '../schema';
+import { newId, now } from '../ids';
+import { expenses, expenseShares, receiptUploads } from '../schema';
 import { commitGroupChange } from '../sync/groupDocs';
 import { listShares, listSharesOfGroups } from './expenseShareRepository';
 
@@ -19,7 +19,7 @@ function attachShares(rows, shareRows) {
   return [...byExpense.values()];
 }
 
-function docInput(input, id) {
+function docInput(input, id, receiptId) {
   return {
     id,
     description: input.description,
@@ -29,29 +29,56 @@ function docInput(input, id) {
     payerId: input.payerId,
     spentOn: input.spentOn,
     note: input.note,
+    receiptId,
     splitType: input.splitType,
     shares: input.shares,
   };
 }
 
-// The receipt photo stays on this device, so it is kept next to the synced record rather than
-// in it.
-const setReceipt = (id, receiptPath) => (tx) =>
-  tx
-    .update(expenses)
-    .set({ receiptPath: receiptPath ?? null })
-    .where(eq(expenses.id, id))
-    .run();
+// A receipt photo is a file of the group, not part of its document: the expense carries the
+// photo's id, the device that took it keeps the file at `receiptPath`, and the file waits in
+// receipt_uploads until the relay has it (sealed).
+//
+// `input.receiptPath` says what to do with it: a path attaches that photo, null removes the
+// receipt for everyone, and leaving it out keeps whatever the expense has. The last matters on a
+// device that has not fetched the photo: editing the amount there must not take the receipt
+// away. The same photo keeps its id through edits; another photo is another file.
+function receiptOf(current, input) {
+  if (input.receiptPath === undefined) return { id: current?.receiptId ?? null, kept: true };
+  if (!input.receiptPath) return { id: null };
+  if (current?.receiptId && current.receiptPath === input.receiptPath) {
+    return { id: current.receiptId, kept: true };
+  }
+  return { id: newId(), isNew: true };
+}
+
+const saveReceipt =
+  (expenseId, groupId, input, receipt, previousId = null) =>
+  (tx) => {
+    if (receipt.kept) return;
+    tx.update(expenses)
+      .set({ receiptPath: input.receiptPath })
+      .where(eq(expenses.id, expenseId))
+      .run();
+    // A photo that was replaced or removed before it was sent is no longer needed by anyone.
+    if (previousId) {
+      tx.delete(receiptUploads).where(eq(receiptUploads.receiptId, previousId)).run();
+    }
+    if (receipt.isNew) {
+      tx.insert(receiptUploads)
+        .values({ receiptId: receipt.id, groupId, path: input.receiptPath, createdAt: now() })
+        .run();
+    }
+  };
 
 export function createExpense(db, input) {
   const id = newId();
+  const receipt = receiptOf(null, input);
   commitGroupChange(
     db,
     input.groupId,
-    (doc, ctx) => groupDoc.putExpense(doc, docInput(input, id), ctx),
-    {
-      afterProject: setReceipt(id, input.receiptPath),
-    },
+    (doc, ctx) => groupDoc.putExpense(doc, docInput(input, id, receipt.id), ctx),
+    { afterProject: saveReceipt(id, input.groupId, input, receipt) },
   );
   return id;
 }
@@ -59,13 +86,12 @@ export function createExpense(db, input) {
 export function updateExpense(db, id, input) {
   const current = db.select().from(expenses).where(eq(expenses.id, id)).get();
   if (!current || current.deletedAt) throw new DbValidationError('expenseNotFound');
+  const receipt = receiptOf(current, input);
   commitGroupChange(
     db,
     current.groupId,
-    (doc, ctx) => groupDoc.putExpense(doc, docInput(input, id), ctx),
-    {
-      afterProject: setReceipt(id, input.receiptPath),
-    },
+    (doc, ctx) => groupDoc.putExpense(doc, docInput(input, id, receipt.id), ctx),
+    { afterProject: saveReceipt(id, current.groupId, input, receipt, current.receiptId) },
   );
 }
 

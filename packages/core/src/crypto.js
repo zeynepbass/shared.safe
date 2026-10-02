@@ -120,6 +120,23 @@ export function createCrypto(sodium) {
 
   // Binds an envelope to its group and epoch, so it cannot be replayed into another group.
   const changeAd = (groupId, epoch) => concat(header(epoch), utf8(`ortakkasa/change/${groupId}`));
+  // A file is bound to its id as well, so the relay cannot hand out one file as another.
+  const fileAd = (groupId, fileId, epoch) =>
+    concat(header(epoch), utf8(`ortakkasa/file/${groupId}/${fileId}`));
+
+  const seal = (keys, plaintext, adOf) => {
+    const epoch = keys.length;
+    if (epoch === 0) throw new CryptoError('noKey');
+    return concat(header(epoch), aeadSeal(plaintext, adOf(epoch), keys[epoch - 1]));
+  };
+
+  const open = (keys, envelope, adOf) => {
+    const epoch = envelopeEpoch(envelope);
+    if (epoch === null) throw new CryptoError('corrupt');
+    const key = keys[epoch - 1];
+    if (!key) throw new CryptoError('unknownKey');
+    return aeadOpen(envelope.slice(HEADER_BYTES), adOf(epoch), key);
+  };
 
   return {
     newGroupKey: () => sodium.randombytes_buf(KEY_BYTES),
@@ -127,20 +144,19 @@ export function createCrypto(sodium) {
     relayToken: (groupId, key) =>
       toBase64Url(sodium.crypto_generichash(32, utf8(`ortakkasa/relay/${groupId}`), key)),
 
-    // Seals one change (or any group payload) with the newest key in `keys`.
-    sealChange(groupId, keys, plaintext) {
-      const epoch = keys.length;
-      if (epoch === 0) throw new CryptoError('noKey');
-      return concat(header(epoch), aeadSeal(plaintext, changeAd(groupId, epoch), keys[epoch - 1]));
-    },
+    // Seals one change with the newest key in `keys`.
+    sealChange: (groupId, keys, plaintext) =>
+      seal(keys, plaintext, (epoch) => changeAd(groupId, epoch)),
 
-    openChange(groupId, keys, envelope) {
-      const epoch = envelopeEpoch(envelope);
-      if (epoch === null) throw new CryptoError('corrupt');
-      const key = keys[epoch - 1];
-      if (!key) throw new CryptoError('unknownKey');
-      return aeadOpen(envelope.slice(HEADER_BYTES), changeAd(groupId, epoch), key);
-    },
+    openChange: (groupId, keys, envelope) =>
+      open(keys, envelope, (epoch) => changeAd(groupId, epoch)),
+
+    // Seals a file of the group (a receipt photo), which travels apart from the changes.
+    sealFile: (groupId, fileId, keys, bytes) =>
+      seal(keys, bytes, (epoch) => fileAd(groupId, fileId, epoch)),
+
+    openFile: (groupId, fileId, keys, envelope) =>
+      open(keys, envelope, (epoch) => fileAd(groupId, fileId, epoch)),
 
     // Everything a recovery secret (the 16 bytes behind the 12 words) stands for.
     identityFromSecret(secret) {

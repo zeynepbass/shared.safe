@@ -5,9 +5,10 @@ import Database from 'better-sqlite3';
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const tokenHash = (token) => digest(Buffer.from(token, 'utf8'));
 
-// Append-only log of opaque change blobs per group, plus the vaults (encrypted key backups).
-// Nothing here decodes a blob: everything is end-to-end encrypted before it arrives. Duplicate
-// changes are recognised by their SHA-256 so a device retrying a push is harmless.
+// Append-only log of opaque change blobs per group, the group's files (receipt photos) and the
+// vaults (encrypted key backups). Nothing here decodes a blob: everything is end-to-end encrypted
+// before it arrives. Duplicate changes are recognised by their SHA-256 so a device retrying a
+// push is harmless.
 //
 // A group's token is replaced when its key is (a member was removed). The replaced token is
 // remembered with the key envelopes of that rotation, so a device that was offline can pick up
@@ -44,6 +45,13 @@ export function openStore(path = ':memory:') {
       data BLOB NOT NULL,
       updated_at INTEGER NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS files (
+      group_id TEXT NOT NULL REFERENCES groups (id),
+      id TEXT NOT NULL,
+      data BLOB NOT NULL,
+      received_at INTEGER NOT NULL,
+      PRIMARY KEY (group_id, id)
+    );
   `);
 
   const statements = {
@@ -67,6 +75,11 @@ export function openStore(path = ':memory:') {
     vault: db.prepare('SELECT token_hash, rev, data FROM vaults WHERE id = ?'),
     putVault: db.prepare(
       'INSERT OR REPLACE INTO vaults (id, token_hash, rev, data, updated_at) VALUES (?, ?, ?, ?, ?)',
+    ),
+    file: db.prepare('SELECT data FROM files WHERE group_id = ? AND id = ?'),
+    // A file never changes once stored: a second device cannot replace a receipt under its id.
+    putFile: db.prepare(
+      'INSERT OR IGNORE INTO files (group_id, id, data, received_at) VALUES (?, ?, ?, ?)',
     ),
   };
 
@@ -134,6 +147,8 @@ export function openStore(path = ':memory:') {
     append,
     getVault,
     putVault,
+    putFile: (groupId, id, data) => statements.putFile.run(groupId, id, data, Date.now()),
+    getFile: (groupId, id) => statements.file.get(groupId, id)?.data ?? null,
     head: (groupId) => statements.head.get(groupId).head,
     since: (groupId, seq, limit) => statements.since.all(groupId, seq, limit),
     close: () => db.close(),

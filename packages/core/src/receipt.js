@@ -155,3 +155,71 @@ export function parseReceipt(text) {
     }));
   return { total: findTotal(lines), date: findDate(lines), merchant: findMerchant(lines) };
 }
+
+// Text recognition returns pieces of text with their boxes, not lines: a label on the left of a
+// receipt and its amount on the right arrive as two pieces. This puts the pieces that sit on the
+// same row back on one line, left to right, rows top to bottom.
+//
+// `blocks` is [{ text, x, y, width, height, angle?, lineHeight? }]: the box around each piece
+// with the origin at the top left, in pixels (any unit works as long as it is the same for all,
+// and the same across and down). `angle` is how the piece's baseline runs, in radians, positive
+// when downhill to the right, and `lineHeight` the height of its line; a recogniser that reports
+// them lets a receipt photographed at an angle be read as well as a straight one.
+export function linesFromBlocks(blocks) {
+  const usable = blocks.filter((b) => b.text?.trim() && b.height > 0);
+  const skew = skewOf(usable);
+  const sin = Math.sin(skew);
+  const cos = Math.cos(skew);
+  // Each piece's place in the receipt's own directions: how far down its rows, how far along.
+  const pieces = usable
+    .map((b) => {
+      const x = b.x + b.width / 2;
+      const y = b.y + b.height / 2;
+      return {
+        text: b.text.trim(),
+        down: y * cos - x * sin,
+        along: x * cos + y * sin,
+        height: b.lineHeight > 0 ? b.lineHeight : b.height,
+      };
+    })
+    .sort((a, b) => a.down - b.down);
+
+  const rows = [];
+  for (const piece of pieces) {
+    const row = rows[rows.length - 1];
+    // Same row when the piece's middle is within half a line of the row's.
+    if (row && Math.abs(piece.down - row.down) < Math.min(row.height, piece.height) / 2) {
+      row.pieces.push(piece);
+      row.down = row.pieces.reduce((sum, p) => sum + p.down, 0) / row.pieces.length;
+      row.height = Math.max(row.height, piece.height);
+    } else {
+      rows.push({ pieces: [piece], down: piece.down, height: piece.height });
+    }
+  }
+  return rows.map((row) =>
+    row.pieces
+      .sort((a, b) => a.along - b.along)
+      .map((p) => p.text)
+      .join(' '),
+  );
+}
+
+// The angle the receipt's text runs at: the median of the pieces' angles, each counting for its
+// width. A long line shows its direction well; a three-letter one barely at all.
+function skewOf(blocks) {
+  const measured = blocks
+    .filter((b) => Number.isFinite(b.angle) && b.width > 0)
+    .sort((a, b) => a.angle - b.angle);
+  const half = measured.reduce((sum, b) => sum + b.width, 0) / 2;
+  let passed = 0;
+  for (const block of measured) {
+    passed += block.width;
+    if (passed >= half) return block.angle;
+  }
+  return 0;
+}
+
+// parseReceipt for what a text recogniser returned.
+export function parseReceiptBlocks(blocks) {
+  return parseReceipt(linesFromBlocks(blocks).join('\n'));
+}

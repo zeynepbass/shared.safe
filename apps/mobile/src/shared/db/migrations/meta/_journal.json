@@ -29,6 +29,13 @@
       "when": 1790762088167,
       "tag": "0003_e2e_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1790856509891,
+      "tag": "0004_receipts",
+      "breakpoints": true
     }
   ]
 }

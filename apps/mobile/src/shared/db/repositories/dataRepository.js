@@ -8,6 +8,7 @@ import {
   settings,
   groupDocChanges,
   groupDocs,
+  receiptUploads,
   settlements,
   syncGroups,
   syncOutbox,
@@ -98,6 +99,7 @@ export function deleteAllData(db) {
       groupDocChanges,
       syncGroups,
       syncOutbox,
+      receiptUploads,
     ]) {
       tx.delete(table).run();
     }

@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { toBase64 } from '@ortak-kasa/core/sync/base64';
+import { MAX_FILE_BYTES } from '@ortak-kasa/core/sync/protocol';
 
 import { createSyncServer } from '../src/server.js';
 import { openStore } from '../src/store.js';
@@ -214,7 +215,107 @@ describe('vaults', () => {
   });
 });
 
+describe('files', () => {
+  it('keeps a file for the group and hands it back unchanged', async () => {
+    const group = randomUUID();
+    const secret = token();
+    const id = randomUUID();
+    const alice = await subscribed(group, secret);
+    const bob = await subscribed(group, secret);
+    const photo = blob(5000);
+
+    bob.send({ t: 'file_get', group, id });
+    expect(await bob.next((m) => m.t === 'file')).toEqual({ t: 'file', group, id, data: null });
+
+    alice.send({ t: 'file_put', group, id, data: photo });
+    expect(await alice.next((m) => m.t === 'file_ok')).toEqual({ t: 'file_ok', group, id });
+    bob.send({ t: 'file_get', group, id });
+    expect(await bob.next((m) => m.t === 'file' && m.data)).toEqual({
+      t: 'file',
+      group,
+      id,
+      data: photo,
+    });
+  });
+
+  it('never replaces a file once it is stored', async () => {
+    const group = randomUUID();
+    const id = randomUUID();
+    const alice = await subscribed(group, token());
+    const first = blob(100);
+    alice.send({ t: 'file_put', group, id, data: first });
+    await alice.next((m) => m.t === 'file_ok');
+    alice.send({ t: 'file_put', group, id, data: blob(100) });
+    await alice.next(() => alice.received.filter((m) => m.t === 'file_ok').length === 2);
+    alice.send({ t: 'file_get', group, id });
+    expect((await alice.next((m) => m.t === 'file')).data).toBe(first);
+  });
+
+  it('are closed to devices that are not subscribed to the group', async () => {
+    const group = randomUUID();
+    const id = randomUUID();
+    const alice = await subscribed(group, token());
+    alice.send({ t: 'file_put', group, id, data: blob(100) });
+    await alice.next((m) => m.t === 'file_ok');
+
+    const mallory = await rawClient(server.port);
+    mallory.send({ t: 'file_get', group, id });
+    expect(await mallory.next((m) => m.t === 'error')).toEqual({
+      t: 'error',
+      code: 'notSubscribed',
+      group,
+      file: id,
+    });
+    mallory.send({ t: 'file_put', group, id: randomUUID(), data: blob(100) });
+    await mallory.next(
+      () => mallory.received.filter((m) => m.code === 'notSubscribed').length === 2,
+    );
+    // A wrong token does not subscribe, so it opens nothing either.
+    const wrong = await subscribed(group, token());
+    wrong.send({ t: 'file_get', group, id });
+    expect((await wrong.next((m) => m.t === 'error' && m.file)).code).toBe('notSubscribed');
+  });
+
+  it("keeps one group's files apart from another's", async () => {
+    const id = randomUUID();
+    const [groupA, groupB] = [randomUUID(), randomUUID()];
+    const alice = await subscribed(groupA, token());
+    const bob = await subscribed(groupB, token());
+    alice.send({ t: 'file_put', group: groupA, id, data: blob(100) });
+    await alice.next((m) => m.t === 'file_ok');
+    bob.send({ t: 'file_get', group: groupB, id });
+    expect((await bob.next((m) => m.t === 'file')).data).toBeNull();
+  });
+
+  it('refuses a file over the size limit', async () => {
+    const group = randomUUID();
+    const alice = await subscribed(group, token());
+    alice.send({ t: 'file_put', group, id: randomUUID(), data: 'A'.repeat(MAX_FILE_BYTES + 4) });
+    expect((await alice.next((m) => m.t === 'error')).code).toBe('badRequest');
+  });
+});
+
 describe('store', () => {
+  it('keeps files across restarts', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'relay-'));
+    try {
+      const path = join(dir, 'relay.db');
+      const group = randomUUID();
+      const id = randomUUID();
+      const first = openStore(path);
+      first.authorize(group, 'secret-token');
+      first.putFile(group, id, Buffer.from([9, 8, 7]));
+      first.close();
+
+      const second = openStore(path);
+      expect([...second.getFile(group, id)]).toEqual([9, 8, 7]);
+      expect(second.getFile(group, randomUUID())).toBeNull();
+      second.close();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('keeps changes across restarts', () => {
     const dir = mkdtempSync(join(tmpdir(), 'relay-'));
     try {

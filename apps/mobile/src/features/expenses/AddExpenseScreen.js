@@ -46,7 +46,14 @@ import {
   updateDraft,
   useDraft,
 } from './draftStore';
-import { deleteReceipt, pickReceipt } from './receipts';
+import {
+  attachReceipt,
+  deleteReceipt,
+  fillDraftFromReceipt,
+  isReceiptOcrAvailable,
+  pickReceipt,
+  removeReceipt,
+} from './receipts';
 
 const TABLES = ['groups', 'members', 'expenses'];
 
@@ -94,7 +101,12 @@ export default function AddExpenseScreen() {
         expense?.splitType ?? 'equal',
         expense?.shares ?? [],
       ),
-      receiptUri: expense?.receiptPath ?? null,
+      // The receipt as the expense has it is kept unless the user attaches another photo
+      // ('new', at receiptUri) or removes it ('removed'). The expense may have a receipt this
+      // device has no copy of: it shows as attached all the same.
+      receiptState: 'keep',
+      receiptUri: null,
+      hadReceipt: Boolean(expense?.receiptId || expense?.receiptPath),
       originalReceiptUri: expense?.receiptPath ?? null,
     });
   }, [members, data, draft?.key, draftKey, groupId, locale]);
@@ -115,21 +127,32 @@ export default function AddExpenseScreen() {
   const onKey = (key) =>
     updateDraft((d) => ({ amountInput: applyKeypadInput(d.amountInput, key, { locale }) }));
 
+  const hasReceipt =
+    draft.receiptState === 'new' || (draft.receiptState === 'keep' && draft.hadReceipt);
+
   const chooseReceipt = async (choice) => {
     setSheet(null);
     if (choice === 'remove') {
-      if (draft.receiptUri !== draft.originalReceiptUri) deleteReceipt(draft.receiptUri);
-      updateDraft({ receiptUri: null });
+      removeReceipt();
+      return;
+    }
+    if (choice === 'scan') {
+      router.push(`/groups/${groupId}/add-expense/scan`);
       return;
     }
     try {
       const result = await pickReceipt(choice);
       if (result.status === 'denied') Alert.alert(t('expenseForm.receiptPermission'));
-      if (result.status === 'ok') {
-        if (draft.receiptUri && draft.receiptUri !== draft.originalReceiptUri) {
-          deleteReceipt(draft.receiptUri);
-        }
-        updateDraft({ receiptUri: result.uri });
+      if (result.status !== 'ok') return;
+      attachReceipt(result.uri);
+      // A photo from the library is read too, but only fills in what is still empty.
+      const found = await fillDraftFromReceipt(result.uri, { locale, mode: 'fill' });
+      if (found.length) {
+        snackbar.show({
+          message: t('expenseForm.receiptRead', {
+            fields: found.map((field) => t(`expenseForm.receiptFields.${field}`)).join(', '),
+          }),
+        });
       }
     } catch (error) {
       reportError(error);
@@ -148,15 +171,16 @@ export default function AddExpenseScreen() {
       payerId: draft.payerId,
       splitType: draft.splitType,
       spentOn: draft.spentOn,
-      receiptPath: draft.receiptUri,
       shares: split.shares,
+      // Left out when the receipt was not touched, so the expense keeps the one it has.
+      ...(draft.receiptState === 'new' ? { receiptPath: draft.receiptUri } : null),
+      ...(draft.receiptState === 'removed' ? { receiptPath: null } : null),
     };
     try {
       if (draft.expenseId) {
         await updateExpense(db, draft.expenseId, input);
-        if (draft.originalReceiptUri && draft.originalReceiptUri !== draft.receiptUri) {
-          deleteReceipt(draft.originalReceiptUri);
-        }
+        // This device's copy of a receipt the expense no longer has.
+        if (draft.receiptState !== 'keep') deleteReceipt(draft.originalReceiptUri);
       } else {
         await createExpense(db, input);
       }
@@ -170,9 +194,7 @@ export default function AddExpenseScreen() {
   };
 
   const close = () => {
-    if (draft.receiptUri && draft.receiptUri !== draft.originalReceiptUri) {
-      deleteReceipt(draft.receiptUri);
-    }
+    if (draft.receiptState === 'new') deleteReceipt(draft.receiptUri);
     router.back();
   };
 
@@ -218,12 +240,13 @@ export default function AddExpenseScreen() {
               onPress={() => setSheet('receipt')}
               accessibilityRole="button"
               accessibilityLabel={
-                draft.receiptUri ? t('expenseForm.receiptAttached') : t('expenseForm.receipt')
+                hasReceipt ? t('expenseForm.receiptAttached') : t('expenseForm.receipt')
               }
+              testID="expense-receipt"
               hitSlop={layout.hitSlop + spacing.xs}
               style={styles.receiptButton}
             >
-              <Icon icon={draft.receiptUri ? Check : Receipt} size={iconSize.sm} color="primary" />
+              <Icon icon={hasReceipt ? Check : Receipt} size={iconSize.sm} color="primary" />
               <AppText variant="caption" color="primary">
                 {t('expenseForm.receipt')}
               </AppText>
@@ -336,9 +359,13 @@ export default function AddExpenseScreen() {
         onClose={() => setSheet(null)}
         onSelect={chooseReceipt}
         options={[
-          { value: 'camera', label: t('expenseForm.receiptTake') },
+          // Scanning reads the receipt and fills the form; without the recogniser (the web) the
+          // camera only takes the photo.
+          isReceiptOcrAvailable
+            ? { value: 'scan', label: t('expenseForm.receiptScan') }
+            : { value: 'camera', label: t('expenseForm.receiptTake') },
           { value: 'library', label: t('expenseForm.receiptPick') },
-          ...(draft.receiptUri ? [{ value: 'remove', label: t('expenseForm.receiptRemove') }] : []),
+          ...(hasReceipt ? [{ value: 'remove', label: t('expenseForm.receiptRemove') }] : []),
         ]}
       />
       <DateSheet

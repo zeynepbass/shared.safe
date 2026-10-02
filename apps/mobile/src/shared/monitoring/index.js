@@ -2,14 +2,14 @@ import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
 import * as Updates from 'expo-updates';
 
-import { scrub } from './scrub';
+import { scrub, scrubEvent } from './scrub';
 
 // Crash and performance reporting. It is off unless a DSN is configured (EXPO_PUBLIC_SENTRY_DSN),
 // so development and tests never report anything.
 //
 // The app's promise is that nobody but the group can read its data, and that includes us.
 // Reports therefore carry no user, no IP address, no screenshots, no taps (their labels are
-// names and amounts) and no console output; whatever is left goes through scrub.
+// names and amounts) and no console output; whatever text is left goes through scrub.js.
 
 const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
 const DROPPED_BREADCRUMBS = ['console', 'touch', 'ui.click', 'ui.input'];
@@ -24,8 +24,6 @@ export function initMonitoring() {
   Sentry.init({
     dsn,
     environment: Updates.channel || (__DEV__ ? 'development' : 'production'),
-    // Which update is running, so a regression can be traced to the update that brought it.
-    dist: Updates.updateId ?? undefined,
     sendDefaultPii: false,
     attachScreenshot: false,
     attachViewHierarchy: false,
@@ -33,9 +31,11 @@ export function initMonitoring() {
     integrations: [navigationIntegration],
     beforeBreadcrumb: (breadcrumb) =>
       DROPPED_BREADCRUMBS.includes(breadcrumb.category) ? null : scrub(breadcrumb),
-    beforeSend: (event) => scrub(event),
-    beforeSendTransaction: (event) => scrub(event),
+    beforeSend: scrubEvent,
+    beforeSendTransaction: scrubEvent,
   });
+  // Which update is running, so a regression can be traced to the update that brought it.
+  Sentry.setTag('expo-update-id', Updates.updateId ?? 'embedded');
 }
 
 // Reports an error that was caught and handled (the user saw a message, nothing crashed).

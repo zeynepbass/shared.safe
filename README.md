@@ -193,6 +193,3 @@ Veritabanı şeması değiştiğinde `apps/mobile` içinde `npm run db:generate`
   performans ölçümü yapılmadı.
 - Maestro akışları ve ekran okuyucu denetimi henüz gerçek cihazda çalıştırılmadı.
 
-## Lisans
-
-MIT. Ayrıntı için [`LICENCE`](LICENCE).

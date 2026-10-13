@@ -175,8 +175,6 @@ Veritabanı şeması değiştiğinde `apps/mobile` içinde `npm run db:generate`
 - **Performans.** 10.000 harcamalı grupla ölçüm betiği: `npm run bench`.
 - **Erişilebilirlik.** Kullanılan her metin ve zemin rengi çifti için kontrast oranı testle
   denetlenir.
-- **Sürekli tümleştirme.** Her pull request'te lint ve birim testleri çalışır
-  (`.github/workflows/ci.yml`).
 
 ## Bilinen sınırlar
 
@@ -192,4 +190,3 @@ Veritabanı şeması değiştiğinde `apps/mobile` içinde `npm run db:generate`
 - Çok büyük gruplarda (on binlerce harcama) grubun belgesini yüklemek yavaştır; cihazda
   performans ölçümü yapılmadı.
 - Maestro akışları ve ekran okuyucu denetimi henüz gerçek cihazda çalıştırılmadı.
-
